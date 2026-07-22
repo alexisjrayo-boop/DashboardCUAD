@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment files
+.env
+*.env
+!.env.example
+
+# Large binary files / executable
+docker-compose
+
+# Build & Log files
+dist/
+build/
+*.log
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/

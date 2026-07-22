@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: gasme-db-prod
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: G4sm32015
+      MYSQL_DATABASE: telmex_cdr
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: G4sm32015
+    ports:
+      - "3308:3307"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: gasme-backend-prod
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - PORT=3000
+      - DB_HOST=db
+      - DB_USER=admin
+      - DB_PASSWORD=G4sm32015
+      - DB_NAME=telmex_cdr
+      - JWT_SECRET=G4sm32025
+      - TELMEX_USERID=lino.sanchez
+      - TELMEX_USERPASS=pwfeWORB@9470.
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: gasme-frontend-prod
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  db_data:
+
+

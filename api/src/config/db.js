@@ -84,6 +84,7 @@ async function initDB() {
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(50) UNIQUE NOT NULL,
+                email VARCHAR(255) NULL,
                 password VARCHAR(255) NOT NULL,
                 name VARCHAR(100),
                 profile_picture LONGTEXT,
@@ -94,7 +95,12 @@ async function initDB() {
         await connection.query(createUsersTableQuery);
         console.log('✓ Tabla users verificada/creada');
 
-        // Asegurar que las columnas name y profile_picture existen (para migraciones)
+        // Asegurar que las columnas name, profile_picture y email existen (para migraciones)
+        try {
+            await connection.query(`ALTER TABLE users ADD COLUMN email VARCHAR(255) AFTER username`);
+        } catch (e) {
+            if (e.code !== 'ER_DUP_FIELDNAME') console.warn('  Nota: ' + e.message);
+        }
         try {
             await connection.query(`ALTER TABLE users ADD COLUMN name VARCHAR(100) AFTER password`);
         } catch (e) {
@@ -107,6 +113,40 @@ async function initDB() {
             try {
                 await connection.query(`ALTER TABLE users MODIFY COLUMN profile_picture LONGTEXT`);
             } catch (err) { }
+            if (e.code !== 'ER_DUP_FIELDNAME') console.warn('  Nota: ' + e.message);
+        }
+
+        // Crear tabla de configuración de envío de reportes
+        const createReportConfigsTableQuery = `
+            CREATE TABLE IF NOT EXISTS email_report_configs (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                recipient_email VARCHAR(255) NOT NULL,
+                name VARCHAR(100) NULL,
+                periodicity VARCHAR(20) DEFAULT 'weekly',
+                line VARCHAR(50) DEFAULT 'all',
+                last_sent TIMESTAMP NULL,
+                last_sent_weekly TIMESTAMP NULL,
+                last_sent_monthly TIMESTAMP NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
+        await connection.query(createReportConfigsTableQuery);
+        console.log('✓ Tabla email_report_configs verificada/creada');
+
+        // Asegurar columnas para migraciones
+        try {
+            await connection.query(`ALTER TABLE email_report_configs ADD COLUMN name VARCHAR(100) NULL AFTER recipient_email`);
+        } catch (e) {
+            if (e.code !== 'ER_DUP_FIELDNAME') console.warn('  Nota: ' + e.message);
+        }
+        try {
+            await connection.query(`ALTER TABLE email_report_configs ADD COLUMN last_sent_weekly TIMESTAMP NULL AFTER last_sent`);
+        } catch (e) {
+            if (e.code !== 'ER_DUP_FIELDNAME') console.warn('  Nota: ' + e.message);
+        }
+        try {
+            await connection.query(`ALTER TABLE email_report_configs ADD COLUMN last_sent_monthly TIMESTAMP NULL AFTER last_sent_weekly`);
+        } catch (e) {
             if (e.code !== 'ER_DUP_FIELDNAME') console.warn('  Nota: ' + e.message);
         }
 

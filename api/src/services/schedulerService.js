@@ -371,10 +371,23 @@ const task = cron.schedule('0 1 * * *', fetchAndSaveDailyCDRs, {
     scheduled: false
 });
 
+// Programar tarea de correos a las 07:00 AM todos los días
+const reportController = require('../controllers/reportController');
+const emailTask = cron.schedule('0 7 * * *', reportController.processAndSendScheduledReports, {
+    scheduled: false
+});
+
 module.exports = {
     startScheduler: () => {
         task.start();
-        console.log('✓ Scheduler iniciado: Ejecución diaria a las 01:00 AM');
+        emailTask.start();
+        console.log('✓ Scheduler de CDRs iniciado: Ejecución diaria a las 01:00 AM');
+        console.log('✓ Scheduler de Reportes de Correo iniciado: Ejecución diaria a las 07:00 AM');
+        
+        // Ejecución inicial después de 15 segundos para procesar reportes pendientes
+        setTimeout(() => {
+            reportController.processAndSendScheduledReports().catch(err => console.error('Error en envío inicial de correos:', err));
+        }, 15000);
     },
     runManualFetch: fetchAndSaveDailyCDRs,
     checkAndRunInitialFetch

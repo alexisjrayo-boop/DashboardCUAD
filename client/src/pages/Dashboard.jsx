@@ -8,12 +8,12 @@ import DashboardCharts from '../components/Dashboard/DashboardCharts';
 import ExtensionStatsTable from '../components/Dashboard/ExtensionStatsTable';
 import ChartConfigModal from '../components/Dashboard/ChartConfigModal';
 import { useDashboard } from '../context/DashboardContext';
-import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, LogOut, Settings, Award } from 'lucide-react';
+import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, LogOut, Settings, Award, FileText, Loader2, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import gasmeLogo from '../assets/gasme.PNG';
 import { parseCalldate } from '../utils/dateUtils';
 import UserManagementModal from '../components/Dashboard/UserManagementModal';
-import { UserPlus } from 'lucide-react';
+import { exportChartsToPDF } from '../utils/exportUtils';
 
 // Default dashboard configuration
 const DEFAULT_CONFIG = {

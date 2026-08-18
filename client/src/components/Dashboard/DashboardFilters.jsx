@@ -242,20 +242,14 @@ const DashboardFilters = ({
     ];
 
     return (
-        <div className="bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] rounded-xl border border-gray-100 font-sans transition-all duration-300">
+        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden font-sans">
             {/* 1. Header & Tabs */}
-            <div className={`border-b border-gray-100 ${loading ? 'opacity-80' : ''}`}>
-                <div className="px-6 py-4">
-                    <div className="flex justify-between items-center mb-0">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-nissan-red/10 p-1.5 rounded-lg">
-                                <Filter className="h-5 w-5 text-nissan-red" />
-                            </div>
-                            <div className="flex items-baseline gap-3">
-                                <h2 className="text-lg font-bold uppercase text-gray-900 tracking-tight">Filtros</h2>
-                                <p className="text-[10px] text-gray-500 font-semibold tracking-wide uppercase opacity-70">Refina el análisis</p>
-                            </div>
-                        </div>
+            <div className={`border-b border-gray-50 pb-4 mb-4 ${loading ? 'opacity-80' : ''}`}>
+                <div className="flex justify-between items-center mb-3">
+                    <div className="flex items-center gap-2">
+                        <span className="w-2 h-6 bg-[#C3002F] rounded-full"></span>
+                        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-700">Filtros</h2>
+                        <span className="text-[10px] text-gray-400 font-semibold tracking-wide uppercase ml-2 opacity-70">Refina el análisis</span>
                     </div>
                 </div>
 
@@ -375,7 +369,7 @@ const DashboardFilters = ({
                                         <option value="2878750303">Tuxtepec (287)</option>
                                         <option value="9717120739">Juchitán (971-712)</option>
                                         <option value="9716884348">Salina Cruz (971-688)</option>
-                                        <option value="CUAD" className="font-bold">CB - CUAD</option>
+                                        <option value="CUAD" className="font-bold">BDC</option>
                                     </select>
                                     <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-3.5 w-3.5 text-gray-300 group-hover/select:text-nissan-red transition-colors" aria-hidden="true" />
                                 </div>
@@ -401,7 +395,7 @@ const DashboardFilters = ({
                                         <option value="TX">Tuxtepec</option>
                                         <option value="SC">Salina Cruz</option>
                                         <option value="JT">Juchitán</option>
-                                        <option value="CB">CUAD</option>
+                                        <option value="CB">BDC</option>
                                     </select>
                                     <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-3.5 w-3.5 text-gray-300 group-hover/select:text-nissan-red transition-colors" aria-hidden="true" />
                                 </div>
@@ -500,55 +494,6 @@ const DashboardFilters = ({
                                 <p className="text-base font-bold text-gray-900 leading-none tracking-tight">{resultsCount.toLocaleString()}</p>
                             </div>
                         )}
-                        {/* <div className="relative group/sync">
-                            <button
-                                disabled={loading}
-                                className="group relative overflow-hidden bg-white text-gray-700 border border-gray-200 px-6 py-2.5 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2 font-bold tracking-wider uppercase text-xs disabled:opacity-50"
-                            >
-                                <ArrowDownLeft className="h-3.5 w-3.5 rotate-180" aria-hidden="true" />
-                                Sincronizar
-                                <ChevronDown className="h-3 w-3 ml-1 text-gray-400" />
-                            </button>
-
-                            <div className="absolute right-0 bottom-full mb-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden hidden group-hover/sync:block z-50 animate-in fade-in slide-in-from-bottom-2">
-                                <div className="p-1">
-                                    <button
-                                        onClick={() => {
-                                            if (confirm('¿Sincronizar datos recientes? Esto buscará registros faltantes desde la última fecha registrada.')) {
-                                                api.post('/admin/trigger-fetch', {}).then(() => alert('Sincronización iniciada en segundo plano.')).catch(e => alert('Error: ' + e.message));
-                                            }
-                                        }}
-                                        className="w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-50 hover:text-nissan-red rounded-lg transition-colors flex items-center gap-2"
-                                    >
-                                        <RefreshCw className="h-3 w-3" />
-                                        Auto (Incremental)
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            if (confirm('¿Forzar resincronización de 2026? Esto revisará todo el año actual.')) {
-                                                api.post('/admin/trigger-fetch', { year: 2026 }).then(() => alert('Sincronización 2026 iniciada.')).catch(e => alert('Error: ' + e.message));
-                                            }
-                                        }}
-                                        className="w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-50 hover:text-nissan-red rounded-lg transition-colors flex items-center gap-2"
-                                    >
-                                        <Calendar className="h-3 w-3" />
-                                        Todo 2026
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            if (confirm('¿Sincronizar año pasado (2025)? Esto puede tardar bastante tiempo.')) {
-                                                api.post('/admin/trigger-fetch', { year: 2025 }).then(() => alert('Sincronización 2025 iniciada.')).catch(e => alert('Error: ' + e.message));
-                                            }
-                                        }}
-                                        className="w-full text-left px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-gray-600 hover:bg-gray-50 hover:text-nissan-red rounded-lg transition-colors flex items-center gap-2"
-                                    >
-                                        <Calendar className="h-3 w-3" />
-                                        Año Pasado (2025)
-                                    </button>
-                                </div>
-                            </div>
-                        </div> */}
-
                         <button
                             onClick={onSearch}
                             disabled={loading}

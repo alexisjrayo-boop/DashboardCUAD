@@ -228,8 +228,8 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
 
                 // Determine branch of THIS row using same logic as dashboardProcessing.js
                 let rowBranch = null;
-                const srcName = extensionsMap[r.src];
-                const destName = extensionsMap[r.destination];
+                const srcName = typeof extensionsMap?.[r.src] === 'string' ? extensionsMap[r.src] : null;
+                const destName = typeof extensionsMap?.[r.destination] === 'string' ? extensionsMap[r.destination] : null;
 
                 if (srcName) {
                     if (srcName.startsWith('TX')) rowBranch = 'Tuxtepec';
@@ -245,10 +245,19 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                     else if (destName.startsWith('CB')) rowBranch = 'CUAD';
                 }
 
-                const TX_TRUNKS = ['2878759701', '2878750303'];
                 if (!rowBranch) {
-                    if (TX_TRUNKS.includes(r.src) || TX_TRUNKS.includes(r.destination)) {
+                    const srcStr = String(r.src || '');
+                    const destStr = String(r.destination || r.dst || '');
+                    const dstStr = String(r.dst || '');
+
+                    if (srcStr.startsWith('287') || destStr.startsWith('287') || dstStr.startsWith('287') || srcStr.startsWith('5') || destStr.startsWith('5')) {
                         rowBranch = 'Tuxtepec';
+                    } else if (srcStr.startsWith('9716') || destStr.startsWith('9716') || dstStr.startsWith('9716') || srcStr.startsWith('7') || destStr.startsWith('7')) {
+                        rowBranch = 'Salina Cruz';
+                    } else if (srcStr.startsWith('9717') || destStr.startsWith('9717') || dstStr.startsWith('9717') || srcStr.startsWith('6') || destStr.startsWith('6')) {
+                        rowBranch = 'Juchitán';
+                    } else if (srcStr.startsWith('3') || destStr.startsWith('3') || dstStr.startsWith('3')) {
+                        rowBranch = 'CUAD';
                     }
                 }
 
@@ -306,13 +315,20 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
             {
                 data: [stats.answered, stats.noAnswer, stats.busy, stats.failed],
                 backgroundColor: [
-                    'rgba(34, 197, 94, 0.8)', // Green
-                    'rgba(239, 68, 68, 0.8)', // Red
-                    'rgba(249, 115, 22, 0.8)', // Orange
-                    'rgba(107, 114, 128, 0.8)', // Gray
+                    '#10B981', // Emerald
+                    '#EF4444', // Rose Red
+                    '#F59E0B', // Amber
+                    '#64748B', // Slate
+                ],
+                hoverBackgroundColor: [
+                    '#059669',
+                    '#DC2626',
+                    '#D97706',
+                    '#475569',
                 ],
                 borderColor: '#ffffff',
-                borderWidth: 2,
+                borderWidth: 3,
+                hoverOffset: 8,
             },
         ],
     };
@@ -325,14 +341,14 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
             groups: ['name'],
             backgroundColor: (ctx) => {
                 const val = ctx.raw ? ctx.raw.v : 0;
-                return val > 50 ? 'rgba(195, 0, 47, 0.9)' : 'rgba(195, 0, 47, 0.6)';
+                return val > 50 ? 'rgba(195, 0, 47, 0.9)' : 'rgba(195, 0, 47, 0.65)';
             },
             labels: { display: true, color: '#fff', font: { size: 11, weight: 'bold' } }
         }]
     };
 
     const chartDefaults = {
-        color: '#374151', // gray-700
+        color: '#475569', // slate-600
         font: {
             family: 'Inter, system-ui, sans-serif',
             size: 11,
@@ -350,65 +366,80 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
         plugins: {
             legend: {
                 position: 'top',
-                labels: { ...chartDefaults }
+                labels: { ...chartDefaults, usePointStyle: true, boxWidth: 8, boxHeight: 8 }
             },
             tooltip: {
-                backgroundColor: 'rgba(17, 24, 39, 0.95)', // gray-900
+                backgroundColor: 'rgba(15, 23, 42, 0.95)', // slate-900
                 padding: 12,
-                cornerRadius: 8,
-                titleFont: { size: 13, weight: 'bold' },
-                bodyFont: { size: 12 },
-                boxPadding: 6
+                cornerRadius: 10,
+                titleFont: { size: 13, weight: 'bold', family: 'Inter' },
+                bodyFont: { size: 12, family: 'Inter' },
+                boxPadding: 6,
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderWidth: 1
             },
         },
         scales: {
             x: {
-                grid: { display: true, color: '#f3f4f6' },
+                grid: { display: true, color: 'rgba(241, 245, 249, 0.8)' },
                 ticks: { ...chartDefaults, maxRotation: 0 }
             },
             y: {
                 beginAtZero: true,
                 border: { dash: [4, 4], display: false },
-                grid: { color: '#f3f4f6' },
+                grid: { color: 'rgba(241, 245, 249, 0.8)' },
                 ticks: { ...chartDefaults }
             }
         },
         elements: {
             line: { tension: 0.4, borderWidth: 3 },
-            point: { radius: 4, hitRadius: 10, hoverRadius: 6, borderWidth: 2, backgroundColor: '#fff' }
+            point: { radius: 3, hitRadius: 10, hoverRadius: 6, borderWidth: 2, backgroundColor: '#fff' },
+            bar: { borderRadius: 8, borderSkipped: false }
         }
     };
 
     if (!chartsData) return null; // Guard against missing data
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+        <div id="dashboard-charts-container" className="grid grid-cols-1 lg:grid-cols-6 gap-6">
 
             {/* Row 1: Status (2x1) & Hourly Detail (4x1) */}
             {isVisible('disposition') && stats && (
-                <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 group">
-                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center gap-2">
-                        <span className="w-2 h-6 bg-green-500 rounded-full"></span>
-                        Estado de Llamadas
+                <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col h-full group">
+                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-6 bg-emerald-500 rounded-full animate-pulse"></span>
+                            <span>Estado de Llamadas</span>
+                        </div>
+                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Proporción</span>
                     </h3>
-                    <div className="h-64 flex justify-center">
+                    <div className="h-64 flex justify-center items-center relative">
                         <Doughnut
                             data={dispositionChartData}
                             options={{
                                 responsive: true,
                                 maintainAspectRatio: false,
+                                cutout: '70%',
                                 onClick: handleDispositionClick,
-                                plugins: { legend: { position: 'right', labels: { font: { family: 'Inter', size: 11 } } } }
+                                plugins: {
+                                    legend: {
+                                        position: 'right',
+                                        labels: { font: { family: 'Inter', size: 11, weight: '600' }, usePointStyle: true, boxWidth: 8 }
+                                    }
+                                }
                             }}
                         />
                     </div>
                 </div>
             )}
 
-            <div className="lg:col-span-4 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500">
-                <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center gap-2">
-                    <span className="w-2 h-6 bg-indigo-500 rounded-full"></span>
-                    Detalle por Hora
+            <div className="lg:col-span-4 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col h-full">
+                <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <span className="w-2 h-6 bg-indigo-500 rounded-full"></span>
+                        <span>Detalle por Hora</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Distribución por Hora</span>
                 </h3>
                 <div className="h-64">
                     <Line
@@ -420,10 +451,13 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
 
             {/* Row 2: Daily Trend (Full width) */}
             {isVisible('daily') && dailyData && (
-                <div className="lg:col-span-6 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500">
-                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center gap-2">
-                        <span className="w-2 h-6 bg-amber-500 rounded-full"></span>
-                        Tendencia Diaria
+                <div className="lg:col-span-6 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col">
+                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-6 bg-amber-500 rounded-full"></span>
+                            <span>Tendencia Diaria</span>
+                        </div>
+                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Volumen Diario</span>
                     </h3>
                     <div className="h-80">
                         <Line
@@ -441,10 +475,13 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
             )}
 
             {/* Row 3: Top Callers & Weekly (3x1 each = 50% width) */}
-            <div className="lg:col-span-3 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500">
-                <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center gap-2">
-                    <span className="w-2 h-6 bg-purple-500 rounded-full"></span>
-                    {isOutgoing ? 'Top Destinos Externos' : 'Top Callers (Mapa de Volumen)'}
+            <div className="lg:col-span-3 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col h-full">
+                <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <span className="w-2 h-6 bg-purple-500 rounded-full"></span>
+                        <span>{isOutgoing ? 'Top Destinos Externos' : 'Top Callers (Mapa de Volumen)'}</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Concentración</span>
                 </h3>
                 <div className="h-72">
                     <Chart
@@ -460,23 +497,29 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
             </div>
 
             {isVisible('weekly-calls') && weeklyCallsData && (
-                <div className="lg:col-span-3 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500">
-                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center gap-2">
-                        <span className="w-2 h-6 bg-teal-500 rounded-full"></span>
-                        Distribución Semanal
+                <div className="lg:col-span-3 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col h-full">
+                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-6 bg-teal-500 rounded-full"></span>
+                            <span>Distribución Semanal</span>
+                        </div>
+                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Día de la semana</span>
                     </h3>
                     <div className="h-72">
-                        <Bar data={weeklyCallsData} options={{ maintainAspectRatio: false, onClick: handleWeeklyClick, plugins: { legend: { display: false } } }} />
+                        <Bar data={weeklyCallsData} options={{ maintainAspectRatio: false, onClick: handleWeeklyClick, plugins: { legend: { display: false } }, elements: { bar: { borderRadius: 8, borderSkipped: false } } }} />
                     </div>
                 </div>
             )}
 
             {/* Row 4: Concurrency (6x1 = Full width) */}
             {isVisible('concurrency') && concurrencyChartData && (
-                <div className="lg:col-span-6 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500">
-                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center gap-2">
-                        <span className="w-2 h-6 bg-orange-500 rounded-full"></span>
-                        Picos de Simultaneidad
+                <div className="lg:col-span-6 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col">
+                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-6 bg-orange-500 rounded-full"></span>
+                            <span>Picos de Simultaneidad</span>
+                        </div>
+                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Capacidad Máxima</span>
                     </h3>
                     <div className="h-80">
                         <Line data={concurrencyChartData} options={{ maintainAspectRatio: false, onClick: handleConcurrencyClick, plugins: { legend: { display: false } } }} />
@@ -498,10 +541,13 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
             )}
 
             {isVisible('area-code') && (areaCodeChartData || (isOutgoing && chartsData?.srcExtOutgoing)) && (
-                <div className="lg:col-span-3 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 h-full flex flex-col">
-                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center gap-2">
-                        <span className="w-2 h-6 bg-blue-500 rounded-full"></span>
-                        {isOutgoing ? 'Extensiones más Activas' : 'Llamadas por Código de Área'}
+                <div className="lg:col-span-3 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden h-full flex flex-col">
+                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-6 bg-blue-500 rounded-full"></span>
+                            <span>{isOutgoing ? 'Extensiones más Activas' : 'Llamadas por Código de Área'}</span>
+                        </div>
+                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Geografía / Ext</span>
                     </h3>
                     <div className="flex-1 min-h-[300px]">
                         <Bar
@@ -509,7 +555,8 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                             options={{
                                 maintainAspectRatio: false,
                                 onClick: isOutgoing ? handleSrcExtOutgoingClick : handleAreaCodeClick,
-                                plugins: { legend: { display: false } }
+                                plugins: { legend: { display: false } },
+                                elements: { bar: { borderRadius: 8, borderSkipped: false } }
                             }}
                         />
                     </div>
@@ -525,10 +572,13 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
 
             {/* Row 7: Daily Trend by Line (Full width) */}
             {isVisible('daily-line') && dailyLineData && (
-                <div className="lg:col-span-6 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500">
-                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center gap-2">
-                        <span className="w-2 h-6 bg-pink-500 rounded-full"></span>
-                        Tendencia Diaria por Línea
+                <div className="lg:col-span-6 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col">
+                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-6 bg-pink-500 rounded-full"></span>
+                            <span>Tendencia Diaria por Línea</span>
+                        </div>
+                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Líneas / Sucursales</span>
                     </h3>
                     <div className="h-80">
                         <Line

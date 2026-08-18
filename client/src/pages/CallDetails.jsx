@@ -219,36 +219,35 @@ const CallDetails = () => {
             </nav>
 
             <main className="p-6 max-w-[1600px] mx-auto space-y-6">
-                {/* Main Content Card */}
-                <div className="bg-white shadow-[0_15px_40px_rgba(0,0,0,0.04)] rounded-[2.5rem] border border-gray-100 overflow-hidden relative">
-                    {/* Brand Accent */}
-                    <div className="absolute top-0 left-0 w-full h-1.5 bg-nissan-red"></div>
+                {/* Main Content Card - Identical to Heatmap Matrix */}
+                <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden">
 
                     {/* Header Section */}
-                    <div className="p-8 border-b border-gray-50 flex flex-col xl:flex-row justify-between items-center gap-6 bg-gradient-to-b from-gray-50/50 to-transparent">
-                        <div className="flex items-center gap-5 w-full xl:w-auto">
+                    <div className="border-b border-gray-50 pb-4 mb-6 flex flex-col xl:flex-row justify-between items-center gap-6">
+                        <div className="flex items-center gap-4 w-full xl:w-auto">
                             <button
                                 onClick={() => navigate(-1)}
-                                className="p-3 bg-white border border-gray-200 hover:border-nissan-red text-gray-400 hover:text-nissan-red rounded-2xl transition-all shadow-sm group"
+                                className="p-2.5 bg-white border border-gray-200 hover:border-nissan-red text-gray-400 hover:text-nissan-red rounded-lg transition-all shadow-sm group"
+                                title="Volver al Dashboard"
                             >
                                 <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
                             </button>
                             <div>
-                                <div className="flex items-center gap-3">
-                                    <div className="h-8 w-1.5 bg-nissan-red rounded-full"></div>
-                                    <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">{title}</h1>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2 h-6 bg-[#C3002F] rounded-full"></span>
+                                    <h1 className="text-sm font-bold text-gray-700 uppercase tracking-wider">{title}</h1>
                                 </div>
-                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1 ml-4">{filteredData.length} registros filtrados</p>
+                                <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide mt-0.5 ml-4">{filteredData.length} registros filtrados</p>
                             </div>
                         </div>
 
                         <div className="flex flex-col md:flex-row items-center gap-3 w-full xl:w-auto">
                             {/* Search Controls Backdrop */}
-                            <div className="flex flex-col md:flex-row items-center gap-3 p-2 bg-gray-50 rounded-[1.5rem] border border-gray-100 w-full">
+                            <div className="flex flex-col md:flex-row items-center gap-2 p-1 bg-gray-50 rounded-lg border border-gray-100 w-full">
                                 <select
                                     value={searchField}
                                     onChange={(e) => setSearchField(e.target.value)}
-                                    className="w-full md:w-auto min-w-[140px] px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-nissan-red/5 outline-none text-xs font-black uppercase text-gray-600 cursor-pointer transition-all hover:border-gray-300"
+                                    className="w-full md:w-auto min-w-[130px] px-3 py-2 bg-white border border-gray-200 rounded-md focus:ring-2 focus:ring-nissan-red/20 outline-none text-xs font-bold uppercase text-gray-600 cursor-pointer transition-all hover:border-gray-300"
                                 >
                                     <option value="all">Todo</option>
                                     <option value="id">ID</option>
@@ -265,15 +264,15 @@ const CallDetails = () => {
                                         placeholder={searchField === 'all' ? "Buscar registros..." : `Filtrar por ${searchField}...`}
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-4 focus:ring-nissan-red/5 focus:border-nissan-red/30 outline-none text-sm font-semibold text-gray-700 placeholder-gray-400 transition-all"
+                                        className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-md focus:ring-2 focus:ring-nissan-red/20 focus:border-nissan-red/30 outline-none text-xs font-semibold text-gray-700 placeholder-gray-400 transition-all"
                                     />
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-nissan-red transition-colors" />
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 group-focus-within:text-nissan-red transition-colors" />
                                 </div>
                             </div>
 
                             <button
                                 onClick={handleDownload}
-                                className="flex items-center gap-2 px-6 py-3.5 bg-[#107C41] hover:bg-[#0E6C38] text-white rounded-2xl transition-all text-xs font-black uppercase tracking-widest shadow-[0_10px_20px_rgba(16,124,65,0.2)] hover:shadow-[0_12px_25px_rgba(16,124,65,0.3)] active:scale-[0.98] w-full md:w-auto mt-2 md:mt-0"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-[#107C41] hover:bg-[#0E6C38] text-white rounded-lg transition-all text-xs font-bold uppercase tracking-wider shadow-sm active:scale-[0.98] w-full md:w-auto mt-2 md:mt-0"
                             >
                                 <Download className="h-4 w-4" />
                                 Exportar EXCEL

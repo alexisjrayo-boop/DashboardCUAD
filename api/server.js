@@ -1,5 +1,5 @@
 // ============================================
-// API Backend para Dashboard CDR Telmex
+// API Backend para Dashboard CDR Telmex (Updated SMTP Config)
 // ============================================
 
 const express = require('express');

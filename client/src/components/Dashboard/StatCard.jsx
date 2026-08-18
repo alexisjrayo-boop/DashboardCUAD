@@ -46,7 +46,7 @@ const StatCard = ({ title, value, subtext, icon: Icon, trend, color = "blue", on
             tabIndex={onClick ? "0" : undefined}
             role={onClick ? "button" : undefined}
             aria-label={onClick ? `Ver detalles de ${title}` : undefined}
-            className={`group relative bg-white rounded-xl p-5 border border-gray-100 hover:border-nissan-red/30 transition-all duration-500 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] ${onClick ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-nissan-red/50' : ''}`}
+            className={`group relative bg-white rounded-2xl p-5 border border-gray-100 hover:border-[#C3002F]/30 transition-all duration-500 shadow-[0_15px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] ${onClick ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-nissan-red/50' : ''}`}
         >
             <div className="flex items-start justify-between mb-4">
                 <div

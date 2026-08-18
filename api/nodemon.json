@@ -1,0 +1,5 @@
+{
+  "watch": ["src", "server.js"],
+  "ext": "js,mjs,cjs",
+  "ignore": ["*.json", "*.xlsx", "src/templates/*.json", "src/templates/*.xlsx"]
+}

@@ -5,7 +5,7 @@ const { pool } = require('../config/db');
 const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.register = async (req, res) => {
-    const { username, password, name, profile_picture } = req.body;
+    const { username, password, name, profile_picture, email } = req.body;
 
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required' });
@@ -24,8 +24,8 @@ exports.register = async (req, res) => {
 
         // Insertar usuario
         const [result] = await pool.query(
-            'INSERT INTO users (username, password, name, profile_picture) VALUES (?, ?, ?, ?)',
-            [username, hashedPassword, name || username, profile_picture || null]
+            'INSERT INTO users (username, password, name, profile_picture, email) VALUES (?, ?, ?, ?, ?)',
+            [username, hashedPassword, name || username, profile_picture || null, email || null]
         );
 
         res.status(201).json({
@@ -68,6 +68,7 @@ exports.login = async (req, res) => {
                 id: user.id,
                 username: user.username,
                 name: user.name,
+                email: user.email,
                 profile_picture: user.profile_picture,
                 role: user.role
             },
@@ -82,6 +83,7 @@ exports.login = async (req, res) => {
                 id: user.id,
                 username: user.username,
                 name: user.name,
+                email: user.email,
                 profile_picture: user.profile_picture,
                 role: user.role
             }
@@ -94,7 +96,7 @@ exports.login = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
     try {
-        const [users] = await pool.query('SELECT id, username, name, profile_picture, role, created_at FROM users ORDER BY created_at DESC');
+        const [users] = await pool.query('SELECT id, username, email, name, profile_picture, role, created_at FROM users ORDER BY created_at DESC');
         res.json({ success: true, users });
     } catch (error) {
         console.error('Error fetching users:', error);
@@ -104,7 +106,7 @@ exports.getUsers = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     const { id } = req.params;
-    const { username, password, name, profile_picture, role } = req.body;
+    const { username, password, name, profile_picture, role, email } = req.body;
 
     try {
         const adminId = req.user.id;
@@ -123,8 +125,8 @@ exports.updateUser = async (req, res) => {
         }
 
         // Prepare query
-        let query = 'UPDATE users SET username = ?, name = ?, profile_picture = ?, role = ?';
-        let params = [username, name, profile_picture, role || 'user'];
+        let query = 'UPDATE users SET username = ?, name = ?, profile_picture = ?, role = ?, email = ?';
+        let params = [username, name, profile_picture, role || 'user', email || null];
 
         if (password) {
             const salt = await bcrypt.genSalt(10);

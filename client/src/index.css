@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
+@theme {
+  --color-nissan-red: #C3002F;
+  --color-nissan-dark: #111111;
+  --color-nissan-gray: #2D2D2D;
+  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
 :root {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;

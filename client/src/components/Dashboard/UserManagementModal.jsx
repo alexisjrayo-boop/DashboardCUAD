@@ -9,6 +9,7 @@ const UserManagementModal = ({ isOpen, onClose }) => {
 
     const [name, setName] = useState('');
     const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [profilePicture, setProfilePicture] = useState('');
     const [role, setRole] = useState('user');
@@ -55,6 +56,7 @@ const UserManagementModal = ({ isOpen, onClose }) => {
     const resetForm = () => {
         setName('');
         setUsername('');
+        setEmail('');
         setPassword('');
         setProfilePicture('');
         setRole('user');
@@ -67,6 +69,7 @@ const UserManagementModal = ({ isOpen, onClose }) => {
         setSelectedUser(userToEdit);
         setName(userToEdit.name || '');
         setUsername(userToEdit.username);
+        setEmail(userToEdit.email || '');
         setPassword(''); // Don't show old password
         setProfilePicture(userToEdit.profile_picture || '');
         setRole(userToEdit.role || 'user');
@@ -103,10 +106,11 @@ const UserManagementModal = ({ isOpen, onClose }) => {
                 password: password || undefined, // Only send if changed
                 name,
                 profile_picture: profilePicture,
-                role
+                role,
+                email
             });
         } else {
-            result = await register(username, password, name, profilePicture);
+            result = await register(username, password, name, profilePicture, email);
         }
 
         if (result.success) {
@@ -194,9 +198,14 @@ const UserManagementModal = ({ isOpen, onClose }) => {
                                             </div>
                                             <div>
                                                 <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight">{u.name || u.username}</h3>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{u.username}</span>
-                                                    <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black uppercase ${u.role === 'admin' ? 'bg-nissan-red text-white' : 'bg-gray-200 text-gray-600'}`}>{u.role}</span>
+                                                <div className="flex flex-col gap-0.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{u.username}</span>
+                                                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-black uppercase ${u.role === 'admin' ? 'bg-nissan-red text-white' : 'bg-gray-200 text-gray-600'}`}>{u.role}</span>
+                                                    </div>
+                                                    {u.email && (
+                                                        <span className="text-[10px] text-gray-500 font-medium">{u.email}</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -278,7 +287,7 @@ const UserManagementModal = ({ isOpen, onClose }) => {
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">ID Usuario</label>
                                     <div className="relative group">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-nissan-red transition-colors" />
+                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-nissan-red transition-colors" />
                                         <input
                                             type="text"
                                             required
@@ -293,17 +302,15 @@ const UserManagementModal = ({ isOpen, onClose }) => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
-                                        {editMode ? 'Nueva Contraseña (Opcional)' : 'Contraseña Inicial'}
-                                    </label>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Correo Electrónico</label>
                                     <div className="relative group">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-nissan-red transition-colors" />
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-nissan-red transition-colors" />
                                         <input
-                                            type="password"
-                                            required={!editMode}
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder="••••••••"
+                                            type="email"
+                                            required
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="jperez@grupogasme.com"
                                             className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:outline-none focus:ring-4 focus:ring-nissan-red/5 focus:border-nissan-red/30 transition-all text-sm font-semibold text-gray-700"
                                         />
                                     </div>
@@ -319,6 +326,25 @@ const UserManagementModal = ({ isOpen, onClose }) => {
                                         <option value="user">Usuario (Estándar)</option>
                                         <option value="admin">Administrador (Total)</option>
                                     </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-5">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                                        {editMode ? 'Nueva Contraseña (Opcional)' : 'Contraseña Inicial'}
+                                    </label>
+                                    <div className="relative group">
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-nissan-red transition-colors" />
+                                        <input
+                                            type="password"
+                                            required={!editMode}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:bg-white focus:outline-none focus:ring-4 focus:ring-nissan-red/5 focus:border-nissan-red/30 transition-all text-sm font-semibold text-gray-700"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 

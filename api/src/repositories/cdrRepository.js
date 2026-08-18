@@ -83,39 +83,42 @@ const getStoredCdrsFromDb = async ({
         }
     }
 
-    // --- Dst (Line) Logic ---
-    if (dst) {
+    // --- Dst (Line / Destination) Logic ---
+    if (dst && dst !== 'all') {
         if (dst === 'BACKGROUND') {
             query += " AND dst NOT REGEXP '^[0-9]+$'";
         } else {
-            // Check if the dst (Line) implies a location with extensions to include
-            let prefix = null;
+            const rawLines = String(dst).split(',').map(s => s.trim()).filter(Boolean);
+            if (rawLines.length > 0) {
+                const lineConditions = [];
+                const lineParams = [];
 
-            // TUXTEPEC (Starts with 5 OR specific lines)
-            if (dst.startsWith('5') || dst === '2878750303' || dst === '2878759701') {
-                prefix = '5';
-            }
-            // SALINA CRUZ (Starts with 7 OR specific line)
-            else if (dst.startsWith('7') || dst === '9716884348') {
-                prefix = '7';
-            }
-            // JUCHITAN (Starts with 6 OR specific line)
-            else if (dst.startsWith('6') || dst === '9717120739') {
-                prefix = '6';
-            }
-            // CORDOBA (Starts with 3)
-            else if (dst.startsWith('3')) {
-                prefix = '3';
-            }
+                for (const lineVal of rawLines) {
+                    if (lineVal === 'CUAD') {
+                        lineConditions.push('(dst LIKE ? OR dst IN (?, ?, ?, ?, ?, ?) OR destination LIKE ? OR destination IN (?, ?, ?, ?, ?, ?))');
+                        lineParams.push('3%', '301', '375', '378', '379', '380', '381', '3%', '301', '375', '378', '379', '380', '381');
+                    } else if (lineVal.startsWith('5') || lineVal === '2878750303' || lineVal === '2878759701') {
+                        lineConditions.push('(dst = ? OR dst LIKE ? OR destination = ? OR destination LIKE ?)');
+                        lineParams.push(lineVal, '5%', lineVal, '5%');
+                    } else if (lineVal.startsWith('7') || lineVal === '9716884348') {
+                        lineConditions.push('(dst = ? OR dst LIKE ? OR destination = ? OR destination LIKE ?)');
+                        lineParams.push(lineVal, '7%', lineVal, '7%');
+                    } else if (lineVal.startsWith('6') || lineVal === '9717120739') {
+                        lineConditions.push('(dst = ? OR dst LIKE ? OR destination = ? OR destination LIKE ?)');
+                        lineParams.push(lineVal, '6%', lineVal, '6%');
+                    } else if (lineVal.startsWith('3') || ['301','375','378','379','380','381'].includes(lineVal)) {
+                        lineConditions.push('(dst = ? OR dst LIKE ? OR destination = ? OR destination LIKE ?)');
+                        lineParams.push(lineVal, '3%', lineVal, '3%');
+                    } else {
+                        lineConditions.push('(dst = ? OR destination = ?)');
+                        lineParams.push(lineVal, lineVal);
+                    }
+                }
 
-            if (prefix) {
-                // Include the specific line OR any extension starting with the prefix
-                query += ' AND (dst = ? OR dst LIKE ?)';
-                params.push(dst, `${prefix}%`);
-            } else {
-                // Standard exact match
-                query += ' AND dst = ?';
-                params.push(dst);
+                if (lineConditions.length > 0) {
+                    query += ` AND (${lineConditions.join(' OR ')})`;
+                    params.push(...lineParams);
+                }
             }
         }
     }

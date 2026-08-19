@@ -19,6 +19,11 @@ import { SankeyController, Flow } from 'chartjs-chart-sankey';
 import { TreemapController, TreemapElement } from 'chartjs-chart-treemap';
 import HeatmapMatrix from '../Common/HeatmapMatrix';
 import ExtensionStatsTable from './ExtensionStatsTable';
+import MonoDonutChart from '../MonoCharts/MonoDonutChart';
+import MonoSplineChart from '../MonoCharts/MonoSplineChart';
+import MonoBarChart from '../MonoCharts/MonoBarChart';
+import MonoTreemap from '../MonoCharts/MonoTreemap';
+import MonoRankList from '../MonoCharts/MonoRankList';
 
 ChartJS.register(
     CategoryScale,
@@ -348,11 +353,11 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
     };
 
     const chartDefaults = {
-        color: '#475569', // slate-600
+        color: '#94a3b8', // slate-400
         font: {
             family: 'Inter, system-ui, sans-serif',
             size: 11,
-            weight: '600'
+            weight: '500'
         }
     };
 
@@ -369,11 +374,11 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                 labels: { ...chartDefaults, usePointStyle: true, boxWidth: 8, boxHeight: 8 }
             },
             tooltip: {
-                backgroundColor: 'rgba(15, 23, 42, 0.95)', // slate-900
+                backgroundColor: 'rgba(15, 23, 42, 0.95)',
                 padding: 12,
-                cornerRadius: 10,
-                titleFont: { size: 13, weight: 'bold', family: 'Inter' },
-                bodyFont: { size: 12, family: 'Inter' },
+                cornerRadius: 12,
+                titleFont: { size: 12, weight: 'bold', family: 'Inter' },
+                bodyFont: { size: 11, family: 'Inter' },
                 boxPadding: 6,
                 borderColor: 'rgba(255, 255, 255, 0.1)',
                 borderWidth: 1
@@ -381,19 +386,19 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
         },
         scales: {
             x: {
-                grid: { display: true, color: 'rgba(241, 245, 249, 0.8)' },
+                grid: { display: true, color: 'rgba(51, 65, 85, 0.4)' },
                 ticks: { ...chartDefaults, maxRotation: 0 }
             },
             y: {
                 beginAtZero: true,
                 border: { dash: [4, 4], display: false },
-                grid: { color: 'rgba(241, 245, 249, 0.8)' },
+                grid: { color: 'rgba(51, 65, 85, 0.4)' },
                 ticks: { ...chartDefaults }
             }
         },
         elements: {
             line: { tension: 0.4, borderWidth: 3 },
-            point: { radius: 3, hitRadius: 10, hoverRadius: 6, borderWidth: 2, backgroundColor: '#fff' },
+            point: { radius: 3, hitRadius: 10, hoverRadius: 6, borderWidth: 2, backgroundColor: '#0f172a' },
             bar: { borderRadius: 8, borderSkipped: false }
         }
     };
@@ -405,124 +410,114 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
 
             {/* Row 1: Status (2x1) & Hourly Detail (4x1) */}
             {isVisible('disposition') && stats && (
-                <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col h-full group">
-                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden flex flex-col h-full">
+                    <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <span className="w-2 h-6 bg-emerald-500 rounded-full animate-pulse"></span>
+                            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                             <span>Estado de Llamadas</span>
                         </div>
-                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Proporción</span>
+                        <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Proporción</span>
                     </h3>
                     <div className="h-64 flex justify-center items-center relative">
-                        <Doughnut
+                        <MonoDonutChart
                             data={dispositionChartData}
-                            options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                cutout: '70%',
-                                onClick: handleDispositionClick,
-                                plugins: {
-                                    legend: {
-                                        position: 'right',
-                                        labels: { font: { family: 'Inter', size: 11, weight: '600' }, usePointStyle: true, boxWidth: 8 }
-                                    }
-                                }
-                            }}
+                            onClick={handleDispositionClick}
                         />
                     </div>
                 </div>
             )}
 
-            <div className="lg:col-span-4 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col h-full">
-                <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+            <div className="lg:col-span-4 bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden flex flex-col h-full">
+                <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <span className="w-2 h-6 bg-indigo-500 rounded-full"></span>
-                        <span>Detalle por Hora</span>
+                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span>Detalle por Hora (Mono Spline)</span>
                     </div>
-                    <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Distribución por Hora</span>
+                    <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Distribución por Hora</span>
                 </h3>
                 <div className="h-64">
-                    <Line
+                    <MonoSplineChart
                         data={filteredHourlyData}
-                        options={{ ...lineOptions, onClick: handleHourlyClick }}
+                        onClick={handleHourlyClick}
+                        strokeColor="#3B82F6"
                     />
                 </div>
             </div>
 
             {/* Row 2: Daily Trend (Full width) */}
             {isVisible('daily') && dailyData && (
-                <div className="lg:col-span-6 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col">
-                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                <div className="lg:col-span-6 bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden flex flex-col">
+                    <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <span className="w-2 h-6 bg-amber-500 rounded-full"></span>
-                            <span>Tendencia Diaria</span>
+                            <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                            <span>Tendencia Diaria (Mono Area)</span>
                         </div>
-                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Volumen Diario</span>
+                        <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Volumen Diario</span>
                     </h3>
-                    <div className="h-80">
-                        <Line
+                    <div className="h-72">
+                        <MonoSplineChart
                             data={dailyData}
-                            options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                onClick: handleDailyClick,
-                                plugins: { legend: { display: false } },
-                                elements: { line: { tension: 0.4, fill: true } }
-                            }}
+                            onClick={handleDailyClick}
+                            strokeColor="#F59E0B"
+                            fillArea={true}
                         />
                     </div>
                 </div>
             )}
 
             {/* Row 3: Top Callers & Weekly (3x1 each = 50% width) */}
-            <div className="lg:col-span-3 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col h-full">
-                <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+            <div className="lg:col-span-3 bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden flex flex-col h-full">
+                <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <span className="w-2 h-6 bg-purple-500 rounded-full"></span>
-                        <span>{isOutgoing ? 'Top Destinos Externos' : 'Top Callers (Mapa de Volumen)'}</span>
+                        <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                        <span>{isOutgoing ? 'Top Destinos Externos' : 'Ranking Top Callers'}</span>
                     </div>
-                    <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Concentración</span>
+                    <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Ranking Actividad</span>
                 </h3>
-                <div className="h-72">
-                    <Chart
-                        type="treemap"
+                <div className="h-72 overflow-y-auto">
+                    <MonoRankList
                         data={treemapChartData}
-                        options={{
-                            plugins: { legend: { display: false } },
-                            maintainAspectRatio: false,
-                            onClick: isOutgoing ? handleTreemapDestClick : handleTreemapClick
-                        }}
+                        onClick={isOutgoing ? handleTreemapDestClick : handleTreemapClick}
                     />
                 </div>
             </div>
 
             {isVisible('weekly-calls') && weeklyCallsData && (
-                <div className="lg:col-span-3 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col h-full">
-                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                <div className="lg:col-span-3 bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden flex flex-col h-full">
+                    <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <span className="w-2 h-6 bg-teal-500 rounded-full"></span>
-                            <span>Distribución Semanal</span>
+                            <span className="w-2 h-2 bg-teal-500 rounded-full"></span>
+                            <span>Distribución Semanal (Mono Bar)</span>
                         </div>
-                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Día de la semana</span>
+                        <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Día de la semana</span>
                     </h3>
-                    <div className="h-72">
-                        <Bar data={weeklyCallsData} options={{ maintainAspectRatio: false, onClick: handleWeeklyClick, plugins: { legend: { display: false } }, elements: { bar: { borderRadius: 8, borderSkipped: false } } }} />
+                    <div className="flex-1 min-h-[300px]">
+                        <MonoBarChart
+                            data={weeklyCallsData}
+                            onClick={handleWeeklyClick}
+                            barColor="#10B981"
+                        />
                     </div>
                 </div>
             )}
 
             {/* Row 4: Concurrency (6x1 = Full width) */}
             {isVisible('concurrency') && concurrencyChartData && (
-                <div className="lg:col-span-6 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col">
-                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                <div className="lg:col-span-6 bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden flex flex-col">
+                    <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <span className="w-2 h-6 bg-orange-500 rounded-full"></span>
-                            <span>Picos de Simultaneidad</span>
+                            <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
+                            <span>Picos de Simultaneidad (Mono Peak Line)</span>
                         </div>
-                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Capacidad Máxima</span>
+                        <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Capacidad Máxima</span>
                     </h3>
-                    <div className="h-80">
-                        <Line data={concurrencyChartData} options={{ maintainAspectRatio: false, onClick: handleConcurrencyClick, plugins: { legend: { display: false } } }} />
+                    <div className="h-80 min-h-[300px]">
+                        <MonoSplineChart
+                            data={concurrencyChartData}
+                            onClick={handleConcurrencyClick}
+                            strokeColor="#EC4899"
+                            fillArea={true}
+                        />
                     </div>
                 </div>
             )}
@@ -541,23 +536,20 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
             )}
 
             {isVisible('area-code') && (areaCodeChartData || (isOutgoing && chartsData?.srcExtOutgoing)) && (
-                <div className="lg:col-span-3 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden h-full flex flex-col">
-                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                <div className="lg:col-span-3 bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden h-full flex flex-col">
+                    <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <span className="w-2 h-6 bg-blue-500 rounded-full"></span>
+                            <span className="w-2 h-2 bg-indigo-500 rounded-full"></span>
                             <span>{isOutgoing ? 'Extensiones más Activas' : 'Llamadas por Código de Área'}</span>
                         </div>
-                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Geografía / Ext</span>
+                        <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Geografía / Ext</span>
                     </h3>
-                    <div className="flex-1 min-h-[300px]">
-                        <Bar
+                    <div className="flex-1 min-h-[280px]">
+                        <MonoBarChart
                             data={isOutgoing ? chartsData.srcExtOutgoing : areaCodeChartData}
-                            options={{
-                                maintainAspectRatio: false,
-                                onClick: isOutgoing ? handleSrcExtOutgoingClick : handleAreaCodeClick,
-                                plugins: { legend: { display: false } },
-                                elements: { bar: { borderRadius: 8, borderSkipped: false } }
-                            }}
+                            onClick={isOutgoing ? handleSrcExtOutgoingClick : handleAreaCodeClick}
+                            barColor="#6366F1"
+                            horizontal={true}
                         />
                     </div>
                 </div>
@@ -572,18 +564,19 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
 
             {/* Row 7: Daily Trend by Line (Full width) */}
             {isVisible('daily-line') && dailyLineData && (
-                <div className="lg:col-span-6 bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden flex flex-col">
-                    <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-50 pb-3 flex items-center justify-between">
+                <div className="lg:col-span-6 bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden flex flex-col">
+                    <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <span className="w-2 h-6 bg-pink-500 rounded-full"></span>
-                            <span>Tendencia Diaria por Línea</span>
+                            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                            <span>Tendencia Diaria por Línea (Mono Spline)</span>
                         </div>
-                        <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-100">Líneas / Sucursales</span>
+                        <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Líneas / Sucursales</span>
                     </h3>
-                    <div className="h-80">
-                        <Line
+                    <div className="h-96 min-h-[380px]">
+                        <MonoSplineChart
                             data={dailyLineData}
-                            options={{ ...lineOptions, onClick: handleDailyLineClick }}
+                            onClick={handleDailyLineClick}
+                            strokeColor="#8B5CF6"
                         />
                     </div>
                 </div>
@@ -593,3 +586,5 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
 };
 
 export default DashboardCharts;
+
+

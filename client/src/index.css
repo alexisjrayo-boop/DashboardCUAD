@@ -342,3 +342,88 @@ body {
 .page-transition-slide {
   animation: slideIn 0.4s ease-out;
 }
+
+/* ==========================================================================
+   AMICRO MONO-CHARTS DESIGN SYSTEM UTILITIES
+   ========================================================================== */
+
+/* Mono Charts Glow & Border Utilities */
+.mono-card {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.mono-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 20px 0 rgba(255, 255, 255, 0.03);
+  transform: translateY(-2px);
+}
+
+.mono-pill {
+  border-radius: 9999px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mono-pill:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.mono-pill:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.mono-glow-emerald {
+  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.25);
+}
+
+.mono-glow-sky {
+  box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.25);
+}
+
+.mono-glow-nissan {
+  box-shadow: 0 0 25px -5px rgba(195, 0, 47, 0.3);
+}
+
+/* Micro-Interaction Animations */
+@keyframes monoPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(0.97);
+  }
+}
+
+@keyframes monoFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-mono-pulse {
+  animation: monoPulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-mono-float {
+  animation: monoFloat 4s ease-in-out infinite;
+}
+
+/* Utility to completely hide scrollbars across all browsers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}

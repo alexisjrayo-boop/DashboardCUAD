@@ -236,25 +236,25 @@ const DashboardFilters = ({
 
     // Tabs Configuration
     const tabs = [
-        { id: 'incoming', label: 'ENTRANTES', icon: ArrowDownLeft, color: 'text-green-600' },
+        { id: 'incoming', label: 'ENTRANTES', icon: ArrowDownLeft, color: 'text-emerald-600' },
         { id: 'outgoing', label: 'SALIENTES', icon: ArrowUpRight, color: 'text-blue-600' },
-        { id: 'internal', label: 'INTERNAS', icon: ArrowRightLeft, color: 'text-orange-600' },
+        { id: 'internal', label: 'INTERNAS', icon: ArrowRightLeft, color: 'text-amber-600' },
     ];
 
     return (
-        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 overflow-hidden font-sans">
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden font-sans">
             {/* 1. Header & Tabs */}
-            <div className={`border-b border-gray-50 pb-4 mb-4 ${loading ? 'opacity-80' : ''}`}>
+            <div className={`border-b border-gray-100 pb-4 mb-4 ${loading ? 'opacity-80' : ''}`}>
                 <div className="flex justify-between items-center mb-3">
                     <div className="flex items-center gap-2">
                         <span className="w-2 h-6 bg-[#C3002F] rounded-full"></span>
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-700">Filtros</h2>
+                        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-800">Filtros</h2>
                         <span className="text-[10px] text-gray-400 font-semibold tracking-wide uppercase ml-2 opacity-70">Refina el análisis</span>
                     </div>
                 </div>
 
                 {/* Tabs Navigation */}
-                <div className="flex items-center gap-6 overflow-x-auto no-scrollbar px-6 mb-[-1px]" role="tablist" aria-label="Tipos de llamadas">
+                <div className="flex items-center gap-2 overflow-hidden no-scrollbar p-1 bg-gray-50 rounded-full border border-gray-100" role="tablist" aria-label="Tipos de llamadas">
                     {tabs.map((tab) => {
                         const isActive = activeTab === tab.id;
                         const Icon = tab.icon;
@@ -269,15 +269,15 @@ const DashboardFilters = ({
                                 onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
                                 disabled={loading}
                                 className={`
-                                        group flex items-center gap-2 pb-2 border-b-2 transition-all duration-200 min-w-max px-1
+                                        mono-pill flex-1 flex items-center justify-center gap-2 py-2 px-4 text-xs font-bold transition-all duration-200 min-w-max rounded-full
                                         ${isActive
-                                        ? 'border-nissan-red text-nissan-red'
-                                        : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-200'}
+                                        ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                                        : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100/50'}
                                         ${loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
                                     `}
                             >
-                                <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-nissan-red' : 'text-gray-500 group-hover:text-gray-700'}`} aria-hidden="true" />
-                                <span className={`text-[10px] font-bold tracking-wider ${isActive ? '' : ''}`}>
+                                <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-[#C3002F]' : 'text-gray-400'}`} aria-hidden="true" />
+                                <span className="tracking-wider">
                                     {tab.label}
                                 </span>
                             </button>
@@ -288,7 +288,7 @@ const DashboardFilters = ({
 
             {/* 2. Main Filter Area */}
             <div
-                className={`p-4 bg-gray-50/30 transition-opacity duration-200 overflow-visible relative z-30 ${loading ? 'opacity-60 pointer-events-none grayscale' : ''}`}
+                className={`p-4 bg-gray-50/50 rounded-xl border border-gray-100 transition-opacity duration-200 overflow-visible relative z-30 ${loading ? 'opacity-60 pointer-events-none grayscale' : ''}`}
                 role="tabpanel"
                 id={`panel-${activeTab}`}
                 aria-labelledby={`tab-${activeTab}`}
@@ -304,7 +304,7 @@ const DashboardFilters = ({
 
                         {/* Controls Group - Expanded */}
                         <div className="flex flex-col md:flex-row items-stretch gap-3 w-full flex-1">
-                            {/* Visual Calendar Picker - Takes available space */}
+                            {/* Visual Calendar Picker */}
                             <div className="flex-1 w-full">
                                 <DateRangePicker
                                     startDate={filters.startDate}
@@ -314,15 +314,15 @@ const DashboardFilters = ({
                                 />
                             </div>
 
-                            {/* Presets - Fixed width or auto */}
-                            <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg w-full md:w-auto justify-center md:justify-start ring-1 ring-gray-100">
+                            {/* Presets - Mono Charts Pill Style */}
+                            <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-full w-full md:w-auto justify-center md:justify-start ring-1 ring-gray-100">
                                 {['yesterday', 'week', 'month', 'lastMonth'].map(preset => (
                                     <button
                                         key={preset}
                                         onClick={() => setDatePreset(preset)}
                                         disabled={loading}
                                         className={`
-                                            flex-1 md:flex-none px-3 py-1.5 text-[10px] font-bold rounded-md transition-all uppercase tracking-wide whitespace-nowrap
+                                            mono-pill flex-1 md:flex-none px-3.5 py-1.5 text-[10px] font-bold rounded-full transition-all uppercase tracking-wide whitespace-nowrap
                                             ${activePreset === preset
                                                 ? 'bg-[#C3002F] text-white shadow shadow-red-200'
                                                 : 'text-gray-600 hover:bg-white hover:text-[#C3002F] hover:shadow-sm'

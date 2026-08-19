@@ -211,10 +211,10 @@ const Dashboard = () => {
                         <img src={gasmeLogo} alt="GASME Logo" className="h-7 w-auto" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-black tracking-tighter uppercase leading-none text-white">
+                        <h1 className="text-xl font-black tracking-tighter uppercase leading-none text-white flex items-center gap-2">
                             GASME <span className="text-white">CUAD</span>
                         </h1>
-                        <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest mt-0.5">Inteligencia Operativa</p>
+                        <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest mt-0.5">Inteligencia Operativa • Mono Visualizers</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">

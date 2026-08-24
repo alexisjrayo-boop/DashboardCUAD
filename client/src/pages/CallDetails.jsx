@@ -6,6 +6,7 @@ import UserManagementModal from '../components/Dashboard/UserManagementModal';
 import * as XLSX from 'xlsx';
 import { useAuth } from '../context/AuthContext';
 import gasmeLogo from '../assets/gasme.PNG';
+import Navbar from '../components/Common/Navbar';
 
 import { Helmet } from 'react-helmet-async';
 
@@ -168,55 +169,13 @@ const CallDetails = () => {
                 <meta name="description" content={`Detalles de ${filteredData.length} registros para ${title}.`} />
             </Helmet>
 
-            {/* Navbar */}
-            <nav className="bg-[#C3002F] px-6 py-2 flex justify-between items-center sticky top-0 z-50 shadow-lg border-b border-white/10">
-                <div className="flex items-center gap-4">
-                    <div className="p-1.5 bg-white rounded-xl shadow-sm">
-                        <img src={gasmeLogo} alt="GASME Logo" className="h-7 w-auto" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-black tracking-tighter uppercase leading-none text-white">
-                            GASME <span className="text-white">CUAD</span>
-                        </h1>
-                        <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest mt-0.5">Control de Análisis</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4">
-                    <div className="hidden md:flex flex-col items-end mr-1">
-                        <span className="text-[11px] font-black text-white uppercase tracking-tight leading-none">
-                            {user?.name || user?.username}
-                        </span>
-                        <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest mt-1">Sistemas</span>
-                    </div>
-
-                    <div className="h-9 w-9 rounded-xl border border-white/20 overflow-hidden bg-white/10 flex-shrink-0 shadow-inner group-hover:border-white/40 transition-colors">
-                        {user?.profile_picture ? (
-                            <img src={user.profile_picture} alt="Profile" className="h-full w-full object-cover" />
-                        ) : (
-                            <div className="h-full w-full flex items-center justify-center bg-white/10 text-white font-black text-sm">
-                                {(user?.name || user?.username || '?')[0].toUpperCase()}
-                            </div>
-                        )}
-                    </div>
-                    {user?.role === 'admin' && (
-                        <button
-                            onClick={() => setShowUserModal(true)}
-                            className="p-2 bg-transparent hover:bg-black/20 text-white rounded-lg border border-white/20 transition-all group"
-                            title="Gestionar Usuarios"
-                        >
-                            <UserPlus className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                        </button>
-                    )}
-
-                    <button
-                        onClick={logout}
-                        className="p-2 bg-transparent hover:bg-black/20 text-white rounded-lg border border-white/20 transition-all group"
-                        title="Cerrar Sesión"
-                    >
-                        <LogOut className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                    </button>
-                </div>
-            </nav>
+            {/* Material Design Navbar */}
+            <Navbar
+                user={user}
+                logout={logout}
+                setShowUserModal={setShowUserModal}
+                showBackButton={true}
+            />
 
             <main className="p-6 max-w-[1600px] mx-auto space-y-6">
                 {/* Main Content Card - Identical to Heatmap Matrix */}

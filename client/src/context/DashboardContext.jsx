@@ -21,9 +21,9 @@ export const DashboardProvider = ({ children }) => {
     // 4. Filter data by branches for global consistency
     const data = useMemo(() => {
         if (!rawData || rawData.length === 0) return [];
-        if (Object.keys(extensionsMap).length === 0) return rawData; // Wait for mapping
+        if (Object.keys(extensionsMap).length === 0) return rawData;
 
-        return rawData.filter(r => {
+        const filtered = rawData.filter(r => {
             let branch = null;
             const srcName = extensionsMap[r.src];
             const destName = extensionsMap[r.destination];
@@ -33,14 +33,14 @@ export const DashboardProvider = ({ children }) => {
                 if (srcName.startsWith('TX')) branch = 'Tuxtepec';
                 else if (srcName.startsWith('SC')) branch = 'Salina Cruz';
                 else if (srcName.startsWith('JT')) branch = 'Juchitán';
-                else if (srcName.startsWith('CB')) branch = 'CUAD';
+                else if (srcName.startsWith('CB')) branch = 'BDC';
             }
 
             if (!branch && destName) {
                 if (destName.startsWith('TX')) branch = 'Tuxtepec';
                 else if (destName.startsWith('SC')) branch = 'Salina Cruz';
                 else if (destName.startsWith('JT')) branch = 'Juchitán';
-                else if (destName.startsWith('CB')) branch = 'CUAD';
+                else if (destName.startsWith('CB')) branch = 'BDC';
             }
 
             // 2. Check for specific trunk lines (Tuxtepec)
@@ -53,6 +53,39 @@ export const DashboardProvider = ({ children }) => {
 
             return branch !== null;
         });
+
+        // 3. Deduplicate by uniqueid to avoid double-counting call segments (trunk leg vs extension leg)
+        const callMap = new Map();
+        const noUidRows = [];
+
+        for (let i = 0; i < filtered.length; i++) {
+            const r = filtered[i];
+            const uid = r.uniqueid;
+            if (!uid) {
+                noUidRows.push(r);
+                continue;
+            }
+
+            const existing = callMap.get(uid);
+            if (!existing) {
+                callMap.set(uid, r);
+            } else {
+                const existingDest = existing.destination || existing.dst;
+                const currentDest = r.destination || r.dst;
+                const isExistingExt = extensionsMap[existingDest] !== undefined;
+                const isCurrentExt = extensionsMap[currentDest] !== undefined;
+
+                if (!isExistingExt && isCurrentExt) {
+                    // Prioritize the segment that reached an actual extension
+                    callMap.set(uid, r);
+                } else if (existing.billsec === 0 && r.billsec > 0) {
+                    // Prioritize the segment where the call was answered
+                    callMap.set(uid, r);
+                }
+            }
+        }
+
+        return [...Array.from(callMap.values()), ...noUidRows];
     }, [rawData, extensionsMap]);
 
     // 5. Derived Statistics & Charts (Memoized for Performance)

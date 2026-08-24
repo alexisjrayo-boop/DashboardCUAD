@@ -80,7 +80,7 @@ const DateRangePicker = ({ startDate, endDate, onDateChange, disabled = false })
     const [start, end] = dateRange;
 
     return (
-        <div className="relative">
+        <div className={`relative ${isOpen ? 'z-50' : 'z-20'}`}>
             <button
                 type="button"
                 onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -146,7 +146,7 @@ const DateRangePicker = ({ startDate, endDate, onDateChange, disabled = false })
                     />
 
                     {/* Calendar Popup */}
-                    <div className="absolute z-50 mt-2 left-1/2 -translate-x-1/2 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] bg-white min-w-max border border-gray-100 overflow-hidden">
+                    <div className="absolute z-50 mt-2 left-1/2 -translate-x-1/2 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] bg-white min-w-max border border-gray-200 overflow-hidden">
                         <DatePicker
                             selected={start}
                             onChange={handleDateChange}

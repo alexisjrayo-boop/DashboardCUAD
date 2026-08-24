@@ -75,7 +75,7 @@ const MonoRankList = ({ data, onClick }) => {
                             {/* Relative Progress Bar */}
                             <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500"
+                                    className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-1000 ease-out"
                                     style={{ width: `${Math.max(ratio, 4)}%` }}
                                 ></div>
                             </div>

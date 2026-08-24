@@ -7,6 +7,7 @@ import DashboardFilters from '../components/Dashboard/DashboardFilters';
 import DashboardCharts from '../components/Dashboard/DashboardCharts';
 import ExtensionStatsTable from '../components/Dashboard/ExtensionStatsTable';
 import ChartConfigModal from '../components/Dashboard/ChartConfigModal';
+import Navbar from '../components/Common/Navbar';
 import { useDashboard } from '../context/DashboardContext';
 import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, LogOut, Settings, Award, FileText, Loader2, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -204,166 +205,133 @@ const Dashboard = () => {
                 <title>Dashboard Analítico - CUAD</title>
                 <meta name="description" content={`Viendo estadísticas de ${stats.total?.toLocaleString() || 0} llamadas.`} />
             </Helmet>
-            {/* Navbar */}
-            <nav className="bg-[#C3002F] px-6 py-2 flex justify-between items-center shadow-lg sticky top-0 z-50 border-b border-white/10">
-                <div className="flex items-center gap-4">
-                    <div className="p-1.5 bg-white rounded-xl shadow-sm">
-                        <img src={gasmeLogo} alt="GASME Logo" className="h-7 w-auto" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-black tracking-tighter uppercase leading-none text-white flex items-center gap-2">
-                            GASME <span className="text-white">CUAD</span>
-                        </h1>
-                        <p className="text-[10px] font-bold text-white/80 uppercase tracking-widest mt-0.5">Inteligencia Operativa • Mono Visualizers</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4">
-                    <div className="hidden md:flex flex-col items-end mr-1">
-                        <span className="text-[11px] font-black text-white uppercase tracking-tight leading-none">
-                            {user?.name}
-                        </span>
-                        <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest mt-1">
-                            {user?.role === 'admin' ? 'Administrador' : 'Usuario'}
-                        </span>
-                    </div>
-
-                    <div className="h-9 w-9 rounded-xl border border-white/20 overflow-hidden bg-white/10 flex-shrink-0 shadow-inner group-hover:border-white/40 transition-colors">
-                        {user?.profile_picture ? (
-                            <img src={user.profile_picture} alt="Profile" className="h-full w-full object-cover" />
-                        ) : (
-                            <div className="h-full w-full flex items-center justify-center bg-white/10 text-white font-black text-sm">
-                                {(user?.name || user?.username || '?')[0].toUpperCase()}
-                            </div>
-                        )}
-                    </div>
-
-                    {user?.role === 'admin' && (
-                        <button
-                            onClick={() => setShowUserModal(true)}
-                            className="p-2 bg-transparent hover:bg-black/20 text-white rounded-lg border border-white/20 transition-all group"
-                            title="Gestionar Usuarios"
-                        >
-                            <UserPlus className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                        </button>
-                    )}
-
-                    <button
-                        onClick={() => setShowConfigModal(true)}
-                        className="p-2 bg-transparent hover:bg-black/20 text-white rounded-lg border border-white/20 transition-all group"
-                        title="Configurar Dashboard"
-                    >
-                        <Settings className="h-5 w-5 group-hover:rotate-90 transition-transform duration-500" />
-                    </button>
-
-                    <button
-                        onClick={logout}
-                        className="p-2 bg-transparent hover:bg-black/20 text-white rounded-lg border border-white/20 transition-all group"
-                        title="Cerrar Sesión"
-                    >
-                        <LogOut className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                    </button>
-                </div>
-            </nav>
+            {/* Material Design Navbar */}
+            <Navbar
+                user={user}
+                logout={logout}
+                setShowUserModal={setShowUserModal}
+                setShowConfigModal={setShowConfigModal}
+            />
 
             <main className="p-6 max-w-[1600px] mx-auto space-y-6">
 
                 {/* Filters Component */}
-                <DashboardFilters
-                    filters={filters}
-                    onFilterChange={handleFilterChange}
-                    onDestChange={handleDestChange}
-                    onDateRangeChange={handleDateRangeChange}
-                    onSearch={handleSearch}
-                    loading={loading}
-                    resultsCount={data.length}
-                    onClearFilters={handleClearFilters}
-                    onRemoveFilter={handleRemoveFilter}
-                />
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 md:gap-6">
-                    {dashboardConfig.stats.find(s => s.id === 'total')?.visible && (
-                        <StatCard
-                            title="TOTAL LLAMADAS"
-                            value={stats.total}
-                            icon={Phone}
-                            color="nissan"
-                            onClick={() => handleStatClick('total', 'Total Llamadas')}
-                        />
-                    )}
-                    {dashboardConfig.stats.find(s => s.id === 'answered')?.visible && (
-                        <StatCard
-                            title="CONTESTADAS"
-                            value={stats.answered}
-                            icon={PhoneIncoming}
-                            color="green"
-                            onClick={() => handleStatClick('answered', 'Llamadas Contestadas')}
-                            percentage={stats.total > 0 ? ((stats.answered / stats.total) * 100).toFixed(1) : 0}
-                        />
-                    )}
-                    {dashboardConfig.stats.find(s => s.id === 'noAnswer')?.visible && (
-                        <StatCard
-                            title="NO CONTESTADAS"
-                            value={stats.noAnswer}
-                            icon={PhoneMissed}
-                            color="red"
-                            onClick={() => handleStatClick('noAnswer', 'Llamadas No Contestadas')}
-                            percentage={stats.total > 0 ? ((stats.noAnswer / stats.total) * 100).toFixed(1) : 0}
-                        />
-                    )}
-                    {dashboardConfig.stats.find(s => s.id === 'busy')?.visible && (
-                        <StatCard
-                            title="OCUPADO"
-                            value={stats.busy}
-                            icon={PhoneOutgoing}
-                            color="orange"
-                            onClick={() => handleStatClick('busy', 'Llamadas Ocupadas')}
-                            percentage={stats.total > 0 ? ((stats.busy / stats.total) * 100).toFixed(1) : 0}
-                        />
-                    )}
-                    {dashboardConfig.stats.find(s => s.id === 'failed')?.visible && (
-                        <StatCard
-                            title="FALLIDO"
-                            value={stats.failed}
-                            icon={PhoneOutgoing}
-                            color="gray"
-                            onClick={() => handleStatClick('failed', 'Llamadas Fallidas')}
-                            percentage={stats.total > 0 ? ((stats.failed / stats.total) * 100).toFixed(1) : 0}
-                        />
-                    )}
-                    {dashboardConfig.stats.find(s => s.id === 'topExtension')?.visible && (
-                        <StatCard
-                            title="EXT. MÁS CONCURRIDA"
-                            value={stats.topExtension}
-                            subtext={stats.topExtensionCount > 0 ? `${stats.topExtensionCount} interacciones` : ''}
-                            icon={Award}
-                            color="purple"
-                        />
-                    )}
-
+                <div className="relative z-30">
+                    <DashboardFilters
+                        filters={filters}
+                        onFilterChange={handleFilterChange}
+                        onDestChange={handleDestChange}
+                        onDateRangeChange={handleDateRangeChange}
+                        onSearch={handleSearch}
+                        loading={loading}
+                        resultsCount={data.length}
+                        onClearFilters={handleClearFilters}
+                        onRemoveFilter={handleRemoveFilter}
+                    />
                 </div>
 
-                {/* Charts Component */}
-                {/* Charts Component */}
-                <DashboardCharts
-                    stats={stats}
-                    chartsData={chartsData}
-                    hourlyData={hourlyData}
-                    dailyData={dailyData}
-                    weeklyHeatmapData={weeklyHeatmapData}
-                    destExtensionHeatmapData={destExtensionHeatmapData}
-                    topCallersData={topCallersData}
-                    weeklyCallsData={weeklyCallsData}
-                    dstStatsData={dstStatsData}
-                    destinationStatsData={destinationStatsData}
-                    extensionStats={extensionStats}
-                    concurrencyChartData={concurrencyChartData}
-                    areaCodeChartData={areaCodeChartData}
-                    sankeyChartData={sankeyChartData}
-                    treemapData={treemapData}
-                    dailyLineData={dailyLineData}
-                    chartConfig={dashboardConfig.charts}
-                />
+                {/* Data Container with Loading Overlay */}
+                <div className="relative z-10">
+                    {loading && (
+                        <div className="absolute inset-0 bg-gray-100/40 backdrop-blur-xs z-40 flex items-center justify-center rounded-3xl transition-all duration-300 min-h-[300px]">
+                            <div className="bg-white/95 p-5 rounded-2xl shadow-xl border border-gray-200/80 flex items-center gap-3.5 animate-mono-pulse">
+                                <Loader2 className="h-6 w-6 text-[#C3002F] animate-spin" />
+                                <span className="text-xs font-black text-gray-700 tracking-widest uppercase">Actualizando Análisis...</span>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="space-y-6">
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 md:gap-6">
+                            {dashboardConfig.stats.find(s => s.id === 'total')?.visible && (
+                                <StatCard
+                                    title="TOTAL LLAMADAS"
+                                    value={stats.total}
+                                    icon={Phone}
+                                    color="nissan"
+                                    onClick={() => handleStatClick('total', 'Total Llamadas')}
+                                    info="Total acumulado de llamadas entrantes, salientes o internas procesadas en el periodo seleccionado."
+                                />
+                            )}
+                            {dashboardConfig.stats.find(s => s.id === 'answered')?.visible && (
+                                <StatCard
+                                    title="CONTESTADAS"
+                                    value={stats.answered}
+                                    icon={PhoneIncoming}
+                                    color="green"
+                                    onClick={() => handleStatClick('answered', 'Llamadas Contestadas')}
+                                    percentage={stats.total > 0 ? ((stats.answered / stats.total) * 100).toFixed(1) : 0}
+                                    info="Llamadas atendidas con éxito por la extensión o receptor (tiempo de conversación > 0 seg)."
+                                />
+                            )}
+                            {dashboardConfig.stats.find(s => s.id === 'noAnswer')?.visible && (
+                                <StatCard
+                                    title="NO CONTESTADAS"
+                                    value={stats.noAnswer}
+                                    icon={PhoneMissed}
+                                    color="red"
+                                    onClick={() => handleStatClick('noAnswer', 'Llamadas No Contestadas')}
+                                    percentage={stats.total > 0 ? ((stats.noAnswer / stats.total) * 100).toFixed(1) : 0}
+                                    info="Llamadas que timbraron pero no fueron respondidas antes de colgar o agotarse el tiempo de espera."
+                                />
+                            )}
+                            {dashboardConfig.stats.find(s => s.id === 'busy')?.visible && (
+                                <StatCard
+                                    title="OCUPADO"
+                                    value={stats.busy}
+                                    icon={PhoneOutgoing}
+                                    color="orange"
+                                    onClick={() => handleStatClick('busy', 'Llamadas Ocupadas')}
+                                    percentage={stats.total > 0 ? ((stats.busy / stats.total) * 100).toFixed(1) : 0}
+                                    info="Llamadas dirigidas a una extensión que ya se encontraba en otra llamada activa o fue rechazada."
+                                />
+                            )}
+                            {dashboardConfig.stats.find(s => s.id === 'failed')?.visible && (
+                                <StatCard
+                                    title="FALLIDO"
+                                    value={stats.failed}
+                                    icon={PhoneOutgoing}
+                                    color="gray"
+                                    onClick={() => handleStatClick('failed', 'Llamadas Fallidas')}
+                                    percentage={stats.total > 0 ? ((stats.failed / stats.total) * 100).toFixed(1) : 0}
+                                    info="Llamadas que no pudieron conectarse debido a un teléfono desconectado/apagado (canal no disponible), troncal saturada, error de red o número inválido."
+                                />
+                            )}
+                            {dashboardConfig.stats.find(s => s.id === 'topExtension')?.visible && (
+                                <StatCard
+                                    title="EXT. MÁS CONCURRIDA"
+                                    value={stats.topExtension}
+                                    subtext={stats.topExtensionCount > 0 ? `${stats.topExtensionCount} interacciones` : ''}
+                                    icon={Award}
+                                    color="purple"
+                                    info="Extensión que concentró el mayor volumen de llamadas gestionadas durante el periodo."
+                                />
+                            )}
+                        </div>
+
+                        {/* Charts Component */}
+                        <DashboardCharts
+                            stats={stats}
+                            chartsData={chartsData}
+                            hourlyData={hourlyData}
+                            dailyData={dailyData}
+                            weeklyHeatmapData={weeklyHeatmapData}
+                            destExtensionHeatmapData={destExtensionHeatmapData}
+                            topCallersData={topCallersData}
+                            weeklyCallsData={weeklyCallsData}
+                            dstStatsData={dstStatsData}
+                            destinationStatsData={destinationStatsData}
+                            extensionStats={extensionStats}
+                            concurrencyChartData={concurrencyChartData}
+                            areaCodeChartData={areaCodeChartData}
+                            sankeyChartData={sankeyChartData}
+                            treemapData={treemapData}
+                            dailyLineData={dailyLineData}
+                            chartConfig={dashboardConfig.charts}
+                        />
+                    </div>
+                </div>
 
                 {/* Configuration Modal */}
                 <ChartConfigModal

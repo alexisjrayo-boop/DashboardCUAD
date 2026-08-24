@@ -21,8 +21,25 @@ const HeatmapMatrix = ({ data, title, xLabels, valueLabel = "llamadas", onCellCl
 
     if (!data || data.length === 0) return null;
 
-    const startIndex = isMobile ? 8 : 0;
-    const endIndex = isMobile ? 20 : 23;
+    // Dynamically find first and last active hour across all rows in data
+    let firstActiveIndex = -1;
+    let lastActiveIndex = -1;
+
+    const totalColumns = xLabels.length;
+    for (let col = 0; col < totalColumns; col++) {
+        let colSum = 0;
+        for (let row = 0; row < data.length; row++) {
+            colSum += (data[row].values[col] || 0);
+        }
+        if (colSum > 0) {
+            if (firstActiveIndex === -1) firstActiveIndex = col;
+            lastActiveIndex = col;
+        }
+    }
+
+    // Default fallback (8:00 to 19:00) if no calls exist in range
+    const startIndex = firstActiveIndex !== -1 ? firstActiveIndex : 8;
+    const endIndex = lastActiveIndex !== -1 ? lastActiveIndex : 19;
 
     const filteredXLabels = xLabels.slice(startIndex, endIndex + 1);
     const filteredData = data.map(row => ({
@@ -96,7 +113,7 @@ const HeatmapMatrix = ({ data, title, xLabels, valueLabel = "llamadas", onCellCl
                                                     tabIndex={onCellClick ? "0" : undefined}
                                                     role={onCellClick ? "button" : undefined}
                                                     aria-label={`${val} ${valueLabel} el ${row.label} a las ${filteredXLabels[colIndex]}`}
-                                                    className={`h-8 w-full rounded-md relative group transition-all duration-200 hover:scale-125 hover:z-20 flex items-center justify-center border border-gray-100 ${onCellClick ? 'cursor-pointer hover:border-emerald-500 hover:shadow-md focus:ring-2 focus:ring-emerald-500 outline-none' : 'cursor-default'}`}
+                                                    className={`h-8 w-full rounded-md relative group transition-all duration-700 ease-out hover:scale-125 hover:z-20 flex items-center justify-center border border-gray-100 ${onCellClick ? 'cursor-pointer hover:border-emerald-500 hover:shadow-md focus:ring-2 focus:ring-emerald-500 outline-none' : 'cursor-default'}`}
                                                     style={{ backgroundColor: bgColor }}
                                                 >
                                                     {isHot && (

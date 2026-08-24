@@ -98,8 +98,9 @@ export const processChartData = (rows, extensionsMap) => {
         'Tuxtepec': {},
         'Salina Cruz': {},
         'Juchitán': {},
-        'CUAD': {}
+        'BDC': {}
     };
+    const lastappCounts = { 'Llamada': 0, 'IVR/Fondo': 0, 'Buzón': 0, 'Colgar': 0, 'Cola': 0, 'Otros': 0 };
 
     // For Extension Heatmap Grid (integrated into main loop)
     // We will collect hourly data for ALL extensions first, then pick the top 15
@@ -111,14 +112,11 @@ export const processChartData = (rows, extensionsMap) => {
         const calldate = r.calldate;
         if (!calldate) continue;
 
-        // FAST DATE PARSING: Use string ops for local time logic instead of new Date()
-        // Format: YYYY-MM-DD HH:mm:ss OR YYYY-MM-DDTHH:mm:ss.sssZ
-        const isISO = calldate.includes('T');
-        const hour = parseInt(isISO ? calldate.substring(11, 13) : calldate.substring(11, 13), 10);
-        const dayStr = calldate.substring(0, 10); // YYYY-MM-DD
-
-        // For day of week, we still need Date, but we can cache it or only do it if needed
-        const dateObj = new Date(calldate.replace('T', ' ').replace('Z', ''));
+        // Parse date correctly using local browser timezone (shifts UTC from DB to local time)
+        const dateObj = parseCalldate(calldate);
+        const hour = dateObj.getHours();
+        const pad = (n) => n < 10 ? '0' + n : n;
+        const dayStr = `${dateObj.getFullYear()}-${pad(dateObj.getMonth() + 1)}-${pad(dateObj.getDate())}`;
         const dayIndex = dateObj.getDay();
 
         let branch = null;
@@ -129,14 +127,14 @@ export const processChartData = (rows, extensionsMap) => {
             if (srcName.startsWith('TX')) branch = 'Tuxtepec';
             else if (srcName.startsWith('SC')) branch = 'Salina Cruz';
             else if (srcName.startsWith('JT')) branch = 'Juchitán';
-            else if (srcName.startsWith('CB')) branch = 'CUAD';
+            else if (srcName.startsWith('CB')) branch = 'BDC';
         }
 
         if (!branch && destName) {
             if (destName.startsWith('TX')) branch = 'Tuxtepec';
             else if (destName.startsWith('SC')) branch = 'Salina Cruz';
             else if (destName.startsWith('JT')) branch = 'Juchitán';
-            else if (destName.startsWith('CB')) branch = 'CUAD';
+            else if (destName.startsWith('CB')) branch = 'BDC';
         }
 
         // Trunk Lines Check (Tuxtepec)
@@ -235,18 +233,61 @@ export const processChartData = (rows, extensionsMap) => {
                 else if (r.disposition === 'FAILED') stat.failed++;
             }
         }
+
+        // Conteo de Acción (lastapp)
+        const lastappVal = r.lastapp;
+        if (lastappVal) {
+            let actionCategory = 'Otros';
+            if (lastappVal === 'Dial' || lastappVal === 'AppDial') {
+                actionCategory = 'Llamada';
+            } else if (['BackGround', 'WaitExten', 'Return', 'Playback'].includes(lastappVal)) {
+                actionCategory = 'IVR/Fondo';
+            } else if (lastappVal.toLowerCase().includes('voicemail')) {
+                actionCategory = 'Buzón';
+            } else if (lastappVal === 'Hangup') {
+                actionCategory = 'Colgar';
+            } else if (lastappVal === 'Queue') {
+                actionCategory = 'Cola';
+            }
+            lastappCounts[actionCategory]++;
+        } else {
+            lastappCounts['Otros']++;
+        }
     }
 
     // --- Post-Processing (Transform into ChartJS formats) ---
 
-    // 1. Hourly Stacked Chart
+    // 1. Hourly Stacked Chart (Dynamically trimmed between first call and last call, preserving 0s in-between)
+    let firstActiveHour = -1;
+    let lastActiveHour = -1;
+
+    for (let i = 0; i < HOURS_COUNT; i++) {
+        const h = hoursStacked[i];
+        const total = h.answered + h.noAnswer + h.busy + h.failed;
+        if (total > 0) {
+            if (firstActiveHour === -1) firstActiveHour = i;
+            lastActiveHour = i;
+        }
+    }
+
+    // Default to 8:00 - 19:00 if no calls exist in range, otherwise use actual first & last active hours
+    const startHour = firstActiveHour !== -1 ? firstActiveHour : 8;
+    const endHour = lastActiveHour !== -1 ? lastActiveHour : 19;
+
+    const trimmedHourlyLabels = [];
+    for (let i = startHour; i <= endHour; i++) {
+        trimmedHourlyLabels.push(`${i}:00`);
+    }
+
+    const activeHourBuckets = hoursStacked.slice(startHour, endHour + 1);
+
     const hourlyChart = {
-        labels: Array.from({ length: HOURS_COUNT }, (_, i) => `${i + START_HOUR}:00`),
+        labels: trimmedHourlyLabels,
         datasets: [
-            { label: 'Contestadas', data: hoursStacked.map(h => h.answered), borderColor: 'rgb(34, 197, 94)', backgroundColor: 'rgba(34, 197, 94, 0.5)', pointRadius: 4, tension: 0.3 },
-            { label: 'No Contestadas', data: hoursStacked.map(h => h.noAnswer), borderColor: 'rgb(239, 68, 68)', backgroundColor: 'rgba(239, 68, 68, 0.5)', pointRadius: 4, tension: 0.3 },
-            { label: 'Ocupado', data: hoursStacked.map(h => h.busy), borderColor: 'rgb(249, 115, 22)', backgroundColor: 'rgba(249, 115, 22, 0.5)', pointRadius: 4, tension: 0.3 },
-            { label: 'Fallido', data: hoursStacked.map(h => h.failed), borderColor: 'rgb(107, 114, 128)', backgroundColor: 'rgba(107, 114, 128, 0.5)', pointRadius: 4, tension: 0.3 }
+            { label: 'Contestadas', data: activeHourBuckets.map(h => h.answered), borderColor: 'rgb(34, 197, 94)', backgroundColor: 'rgba(34, 197, 94, 0.5)', pointRadius: 4, tension: 0.3 },
+            { label: 'No Contestadas', data: activeHourBuckets.map(h => h.noAnswer), borderColor: 'rgb(239, 68, 68)', backgroundColor: 'rgba(239, 68, 68, 0.5)', pointRadius: 4, tension: 0.3 },
+            { label: 'Ocupado', data: activeHourBuckets.map(h => h.busy), borderColor: 'rgb(249, 115, 22)', backgroundColor: 'rgba(249, 115, 22, 0.5)', pointRadius: 4, tension: 0.3 },
+            { label: 'Fallido', data: activeHourBuckets.map(h => h.failed), borderColor: 'rgb(107, 114, 128)', backgroundColor: 'rgba(107, 114, 128, 0.5)', pointRadius: 4, tension: 0.3 }
         ]
     };
 
@@ -337,6 +378,23 @@ export const processChartData = (rows, extensionsMap) => {
 
     console.log(`Processing ${rows.length} rows took ${Math.round(performance.now() - start)}ms`);
 
+    // Format lastapp / acción chart data
+    const lastappChart = {
+        labels: Object.keys(lastappCounts),
+        datasets: [{
+            label: 'Interacciones',
+            data: Object.values(lastappCounts),
+            backgroundColor: [
+                '#6750A4', // Primary Purple
+                '#0288D1', // Cyan/Blue
+                '#00897B', // Teal
+                '#F57C00', // Orange
+                '#E91E63', // Pink
+                '#78909C'  // Blue Grey (Otros)
+            ]
+        }]
+    };
+
     return {
         hourly: hourlyChart,
         daily: dailyChart,
@@ -352,6 +410,7 @@ export const processChartData = (rows, extensionsMap) => {
         treemapDest: treemapDestData,
         srcExtOutgoing: srcExtOutgoingChartData,
         calendar: calendarData,
+        lastapp: lastappChart,
         dailyLine: {
             labels: dailyLabels,
             datasets: [
@@ -380,8 +439,8 @@ export const processChartData = (rows, extensionsMap) => {
                     tension: 0.4
                 },
                 {
-                    label: 'CUAD',
-                    data: dailyLabels.map(date => dailyBranchCounts['CUAD'][date] || 0),
+                    label: 'BDC',
+                    data: dailyLabels.map(date => dailyBranchCounts['BDC'][date] || 0),
                     borderColor: '#8B5CF6', // Purple
                     backgroundColor: '#8B5CF622',
                     fill: false,

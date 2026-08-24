@@ -85,7 +85,7 @@ const MonoDonutChart = ({ data, onClick }) => {
                                 strokeDasharray={slice.strokeDasharray}
                                 strokeDashoffset={slice.strokeDashoffset}
                                 strokeLinecap="round"
-                                className="transition-all duration-300 cursor-pointer"
+                                className="transition-all duration-1000 ease-out cursor-pointer"
                                 onMouseEnter={() => setHoveredIndex(slice.idx)}
                                 onMouseLeave={() => setHoveredIndex(null)}
                                 onClick={(e) => onClick && onClick(e, [{ index: slice.idx }])}

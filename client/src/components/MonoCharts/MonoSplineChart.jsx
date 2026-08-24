@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 
 const PALETTE = [
-    '#3B82F6', // Blue
-    '#10B981', // Emerald
-    '#F59E0B', // Amber
-    '#8B5CF6', // Purple
-    '#EC4899', // Pink
-    '#06B6D4', // Cyan
-    '#EF4444', // Red
-    '#6366F1'  // Indigo
+    '#6750A4', // Primary Purple (Material 3)
+    '#0288D1', // Material Cyan/Blue
+    '#00897B', // Material Teal
+    '#F57C00', // Material Orange
+    '#E91E63', // Material Pink
+    '#3949AB', // Material Indigo
+    '#8E24AA'  // Material Purple Medium
 ];
 
 const MonoSplineChart = ({ data, onClick, fillArea = false, strokeColor }) => {
@@ -153,6 +152,7 @@ const MonoSplineChart = ({ data, onClick, fillArea = false, strokeColor }) => {
                                 key={`area-${sIdx}`}
                                 d={s.areaPath}
                                 fill={`url(#monoGradient-${sIdx})`}
+                                className="transition-all duration-1000 ease-out"
                             />
                         );
                     })}
@@ -169,6 +169,7 @@ const MonoSplineChart = ({ data, onClick, fillArea = false, strokeColor }) => {
                                 strokeWidth="2.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
+                                className="transition-all duration-1000 ease-out"
                             />
                         );
                     })}
@@ -204,7 +205,7 @@ const MonoSplineChart = ({ data, onClick, fillArea = false, strokeColor }) => {
                                     backgroundColor: s.color,
                                     borderColor: '#ffffff'
                                 }}
-                                className={`absolute rounded-full border-2 transform -translate-x-1/2 -translate-y-1/2 transition-all cursor-pointer shadow-xs ${isHovered ? 'w-3.5 h-3.5 ring-2 ring-blue-400 scale-125 z-20' : 'w-2.5 h-2.5 z-10 opacity-95'}`}
+                                className={`absolute rounded-full border-2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-1000 ease-out cursor-pointer shadow-xs ${isHovered ? 'w-3.5 h-3.5 ring-2 ring-blue-400 scale-125 z-20' : 'w-2.5 h-2.5 z-10 opacity-95'}`}
                                 onMouseEnter={() => setHoveredIdx(pt.idx)}
                                 onMouseLeave={() => setHoveredIdx(null)}
                                 onClick={(e) => onClick && onClick(e, [{ datasetIndex: sIdx, index: pt.idx }])}
@@ -258,7 +259,7 @@ const MonoSplineChart = ({ data, onClick, fillArea = false, strokeColor }) => {
                             style={{ left: `${leftPct}%` }}
                             onMouseEnter={() => setHoveredIdx(lblIdx)}
                             onMouseLeave={() => setHoveredIdx(null)}
-                            className={`absolute transform -translate-x-1/2 text-[10px] font-sans transition-colors cursor-pointer select-none whitespace-nowrap ${isHovered ? 'text-gray-900 font-bold' : 'text-gray-400 font-medium'}`}
+                            className={`absolute transform -translate-x-1/2 text-[10px] font-sans transition-all duration-1000 ease-out cursor-pointer select-none whitespace-nowrap ${isHovered ? 'text-gray-900 font-bold' : 'text-gray-400 font-medium'}`}
                         >
                             {labels[lblIdx]}
                         </span>

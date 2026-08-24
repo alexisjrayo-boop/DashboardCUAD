@@ -42,6 +42,11 @@ ChartJS.register(
     TreemapElement
 );
 
+ChartJS.defaults.animation = {
+    duration: 1000,
+    easing: 'easeOutQuart'
+};
+
 const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineData, weeklyHeatmapData, destExtensionHeatmapData, topCallersData, weeklyCallsData, dstStatsData, destinationStatsData, extensionStats, concurrencyChartData, areaCodeChartData, sankeyChartData, treemapData, chartConfig = [] }) => {
 
     const [isMobile, setIsMobile] = useState(false);
@@ -56,20 +61,10 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
     const { data, filters, extensionsMap } = useDashboard(); // still need 'data' for drill-downs and 'filters' for logic
     const navigate = useNavigate();
 
-    // Filter hourly data for mobile (8:00 to 20:00)
+    // Hourly data dynamically trimmed from first to last active hour
     const filteredHourlyData = useMemo(() => {
-        if (!hourlyData || !isMobile) return hourlyData;
-        const startIndex = 8;
-        const endIndex = 20;
-        return {
-            ...hourlyData,
-            labels: hourlyData.labels.slice(startIndex, endIndex + 1),
-            datasets: hourlyData.datasets.map(ds => ({
-                ...ds,
-                data: ds.data.slice(startIndex, endIndex + 1)
-            }))
-        };
-    }, [hourlyData, isMobile]);
+        return hourlyData || null;
+    }, [hourlyData]);
 
     // Helper to check if a chart is visible
     const isVisible = (chartId) => {
@@ -170,8 +165,7 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                 // Use substring to allow detail view to match graph bucket exactly
                 // Matches logic in dashboardProcessing.js
                 // Format YYYY-MM-DD HH:mm:ss OR YYYY-MM-DDTHH:mm:ss.sssZ
-                const isISO = r.calldate.includes('T');
-                const h = parseInt(isISO ? r.calldate.substring(11, 13) : r.calldate.substring(11, 13), 10);
+                const h = new Date(r.calldate).getHours();
                 return h === hour;
             });
             navigate('/details', { state: { title: `Llamadas a las ${label}`, data: filtered } });
@@ -240,14 +234,14 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                     if (srcName.startsWith('TX')) rowBranch = 'Tuxtepec';
                     else if (srcName.startsWith('SC')) rowBranch = 'Salina Cruz';
                     else if (srcName.startsWith('JT')) rowBranch = 'Juchitán';
-                    else if (srcName.startsWith('CB')) rowBranch = 'CUAD';
+                    else if (srcName.startsWith('CB')) rowBranch = 'BDC';
                 }
 
                 if (!rowBranch && destName) {
                     if (destName.startsWith('TX')) rowBranch = 'Tuxtepec';
                     else if (destName.startsWith('SC')) rowBranch = 'Salina Cruz';
                     else if (destName.startsWith('JT')) rowBranch = 'Juchitán';
-                    else if (destName.startsWith('CB')) rowBranch = 'CUAD';
+                    else if (destName.startsWith('CB')) rowBranch = 'BDC';
                 }
 
                 if (!rowBranch) {
@@ -262,7 +256,7 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                     } else if (srcStr.startsWith('9717') || destStr.startsWith('9717') || dstStr.startsWith('9717') || srcStr.startsWith('6') || destStr.startsWith('6')) {
                         rowBranch = 'Juchitán';
                     } else if (srcStr.startsWith('3') || destStr.startsWith('3') || dstStr.startsWith('3')) {
-                        rowBranch = 'CUAD';
+                        rowBranch = 'BDC';
                     }
                 }
 
@@ -287,6 +281,32 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
         }
     }, [data, areaCodeChartData, navigate]);
 
+    const handleLastappClick = useCallback((event, elements) => {
+        if (!elements || elements.length === 0 || !chartsData?.lastapp) return;
+        const index = elements[0].index;
+        const category = chartsData.lastapp.labels[index];
+        
+        const categoryMap = {
+            'Llamada': ['Dial', 'AppDial'],
+            'IVR/Fondo': ['BackGround', 'WaitExten', 'Return', 'Playback'],
+            'Buzón': ['VoiceMail', 'VoiceMailMain'],
+            'Colgar': ['Hangup'],
+            'Cola': ['Queue']
+        };
+
+        const targetApps = categoryMap[category];
+        const filtered = data.filter(r => {
+            if (!r.lastapp) return category === 'Otros';
+            if (targetApps) {
+                return targetApps.includes(r.lastapp) || (category === 'Buzón' && r.lastapp.toLowerCase().includes('voicemail'));
+            }
+            const allKnown = Object.values(categoryMap).flat();
+            return !allKnown.includes(r.lastapp) && !r.lastapp.toLowerCase().includes('voicemail');
+        });
+
+        navigate('/details', { state: { title: `Acción - ${category}`, data: filtered } });
+    }, [data, chartsData, navigate]);
+
     const isOutgoing = filters.calltype === '3';
 
     const handleHeatmapClick = useCallback((dayLabel, hourLabel, value) => {
@@ -301,12 +321,9 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
 
                 // Match dashboardProcessing.js Logic EXACTLY:
                 // 1. Hour via substring (ignores timezone shift)
-                const isISO = r.calldate.includes('T');
-                const localHour = parseInt(isISO ? r.calldate.substring(11, 13) : r.calldate.substring(11, 13), 10);
-
-                // 2. Day via "stripped" Date object (ignores timezone shift)
-                const dateStr = r.calldate.replace('T', ' ').replace('Z', '');
-                const localDay = new Date(dateStr).getDay();
+                const dateObj = new Date(r.calldate);
+                const localHour = dateObj.getHours();
+                const localDay = dateObj.getDay();
 
                 return localDay === targetDayIndex && localHour === targetHour;
             });
@@ -431,7 +448,7 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                 <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                        <span>Detalle por Hora (Mono Spline)</span>
+                        <span>Detalle por Hora</span>
                     </div>
                     <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Distribución por Hora</span>
                 </h3>
@@ -450,7 +467,7 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                     <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
-                            <span>Tendencia Diaria (Mono Area)</span>
+                            <span>Tendencia Diaria</span>
                         </div>
                         <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Volumen Diario</span>
                     </h3>
@@ -487,7 +504,7 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                     <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <span className="w-2 h-2 bg-teal-500 rounded-full"></span>
-                            <span>Distribución Semanal (Mono Bar)</span>
+                            <span>Distribución Semanal</span>
                         </div>
                         <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Día de la semana</span>
                     </h3>
@@ -507,7 +524,7 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                     <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
-                            <span>Picos de Simultaneidad (Mono Peak Line)</span>
+                            <span>Picos de Simultaneidad</span>
                         </div>
                         <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Capacidad Máxima</span>
                     </h3>
@@ -568,7 +585,7 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                     <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                            <span>Tendencia Diaria por Línea (Mono Spline)</span>
+                            <span>Tendencia Diaria por Línea</span>
                         </div>
                         <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Líneas / Sucursales</span>
                     </h3>
@@ -577,6 +594,25 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                             data={dailyLineData}
                             onClick={handleDailyLineClick}
                             strokeColor="#8B5CF6"
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Row 8: Acción / lastapp distribution (Full width) */}
+            {chartsData?.lastapp && (
+                <div className="lg:col-span-6 bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden flex flex-col">
+                    <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-[#6750A4] rounded-full animate-pulse"></span>
+                            <span>Distribución por Acción / Tipo de Interacción</span>
+                        </div>
+                        <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Acción (lastapp)</span>
+                    </h3>
+                    <div className="flex-1 min-h-[280px]">
+                        <MonoBarChart
+                            data={chartsData.lastapp}
+                            onClick={handleLastappClick}
                         />
                     </div>
                 </div>

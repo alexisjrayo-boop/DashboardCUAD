@@ -370,8 +370,8 @@ const ChartConfigModal = ({ isOpen, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[680px] max-h-[90vh] min-h-[550px] overflow-hidden border border-slate-200 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-backdrop">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[680px] max-h-[90vh] min-h-[550px] overflow-hidden border border-slate-200 flex flex-col animate-zoom-out">
                 
                 {/* Header corporativo GASME */}
                 <div className="bg-gradient-to-r from-red-700 via-red-600 to-rose-700 text-white px-6 py-4 flex justify-between items-center shadow-md">

@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { RefreshCw, Filter, Calendar, MapPin, Phone, X, LayoutGrid, ChevronDown, ArrowDownLeft, ArrowUpRight, ArrowRightLeft, Users } from 'lucide-react';
 import MultiSelect from '../Common/MultiSelect';
+import CustomSelect from '../Common/CustomSelect';
 import FilterPill from '../Common/FilterPill';
 import Tooltip from '../Common/Tooltip';
 import DateRangePicker from '../Common/DateRangePicker';
@@ -82,7 +83,46 @@ const DashboardFilters = ({
         });
     }, [extensionOptions, filters.line]);
 
-    const [activePreset, setActivePreset] = useState(null);
+    const lineOptions = useMemo(() => [
+        { value: '', label: 'Todas las Líneas' },
+        { value: '2878750303', label: 'Tuxtepec (287)' },
+        { value: '9717120739', label: 'Juchitán (971-712)' },
+        { value: '9716884348', label: 'Salina Cruz (971-688)' },
+        { value: 'CUAD', label: 'BDC' }
+    ], []);
+
+    const locationOptions = useMemo(() => [
+        { value: '', label: 'Todas las Ubicaciones' },
+        { value: 'TX', label: 'Tuxtepec' },
+        { value: 'SC', label: 'Salina Cruz' },
+        { value: 'JT', label: 'Juchitán' },
+        { value: 'CB', label: 'BDC' }
+    ], []);
+
+    const dispositionOptions = useMemo(() => [
+        { value: '', label: 'Todos los Estados' },
+        { value: 'ANSWERED', label: 'Contestadas' },
+        { value: 'NO ANSWER', label: 'No Contestadas' },
+        { value: 'BUSY', label: 'Ocupado' },
+        { value: 'FAILED', label: 'Fallido' }
+    ], []);
+
+    const [activePreset, setActivePreset] = useState('month');
+
+    // Sync activePreset when filters change or are cleared
+    useEffect(() => {
+        if (!filters.startDate && !filters.endDate) {
+            setActivePreset('month');
+            return;
+        }
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const pad = (n) => n < 10 ? '0' + n : n;
+        const monthStartPrefix = `${firstDay.getFullYear()}-${pad(firstDay.getMonth() + 1)}-01`;
+        if (filters.startDate && filters.startDate.startsWith(monthStartPrefix) && !activePreset) {
+            setActivePreset('month');
+        }
+    }, [filters.startDate, filters.endDate, activePreset]);
 
     // Wrapper for custom date changes to clear active preset
     const handleCustomDateChange = (start, end) => {
@@ -110,11 +150,9 @@ const DashboardFilters = ({
         let startDate, endDate;
 
         switch (preset) {
-            case 'yesterday':
-                const yesterday = new Date(today);
-                yesterday.setDate(today.getDate() - 1);
-                startDate = formatDateTime(setTime(yesterday, 0, 0, 0));
-                endDate = formatDateTime(setTime(yesterday, 23, 59, 59));
+            case 'today':
+                startDate = formatDateTime(setTime(today, 0, 0, 0));
+                endDate = formatDateTime(setTime(today, 23, 59, 59));
                 break;
             case 'week':
                 const weekStart = new Date(today);
@@ -242,7 +280,7 @@ const DashboardFilters = ({
     ];
 
     return (
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-hidden font-sans">
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-visible relative z-30 font-sans">
             {/* 1. Header & Tabs */}
             <div className={`border-b border-gray-100 pb-4 mb-4 ${loading ? 'opacity-80' : ''}`}>
                 <div className="flex justify-between items-center mb-3">
@@ -253,42 +291,54 @@ const DashboardFilters = ({
                     </div>
                 </div>
 
-                {/* Tabs Navigation */}
-                <div className="flex items-center gap-2 overflow-hidden no-scrollbar p-1 bg-gray-50 rounded-full border border-gray-100" role="tablist" aria-label="Tipos de llamadas">
-                    {tabs.map((tab) => {
-                        const isActive = activeTab === tab.id;
-                        const Icon = tab.icon;
-                        return (
-                            <button
-                                key={tab.id}
-                                id={`tab-${tab.id}`}
-                                role="tab"
-                                aria-selected={isActive}
-                                aria-controls={`panel-${tab.id}`}
-                                onClick={() => handleTabChange(tab.id)}
-                                onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
-                                disabled={loading}
-                                className={`
-                                        mono-pill flex-1 flex items-center justify-center gap-2 py-2 px-4 text-xs font-bold transition-all duration-200 min-w-max rounded-full
+                {/* Tabs Navigation (Sliding Segment Control) */}
+                <div className="p-1 bg-gray-100 rounded-full border border-gray-200/70" role="tablist" aria-label="Tipos de llamadas">
+                    <div className="relative grid grid-cols-3 w-full">
+                        {/* Sliding Pill Indicator */}
+                        <div
+                            className="absolute top-0 bottom-0 rounded-full bg-white shadow-sm border border-gray-200/80 transition-transform duration-300 ease-out pointer-events-none"
+                            style={{
+                                width: '33.333333%',
+                                transform: `translateX(${activeTab === 'incoming' ? '0%' : activeTab === 'outgoing' ? '100%' : '200%'})`
+                            }}
+                        />
+
+                        {tabs.map((tab) => {
+                            const isActive = activeTab === tab.id;
+                            const Icon = tab.icon;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    id={`tab-${tab.id}`}
+                                    role="tab"
+                                    aria-selected={isActive}
+                                    aria-controls={`panel-${tab.id}`}
+                                    onClick={() => handleTabChange(tab.id)}
+                                    onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
+                                    disabled={loading}
+                                    className={`
+                                        relative z-10 flex items-center justify-center gap-2 py-2 px-4 text-xs font-bold transition-colors duration-200 rounded-full select-none cursor-pointer
                                         ${isActive
-                                        ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                                        : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100/50'}
-                                        ${loading ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+                                            ? 'text-gray-900'
+                                            : 'text-gray-500 hover:text-gray-900'
+                                        }
+                                        ${loading ? 'cursor-not-allowed opacity-50' : ''}
                                     `}
-                            >
-                                <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-[#C3002F]' : 'text-gray-400'}`} aria-hidden="true" />
-                                <span className="tracking-wider">
-                                    {tab.label}
-                                </span>
-                            </button>
-                        );
-                    })}
+                                >
+                                    <Icon className={`h-3.5 w-3.5 transition-colors duration-200 ${isActive ? 'text-[#C3002F]' : 'text-gray-400'}`} aria-hidden="true" />
+                                    <span className="tracking-wider">
+                                        {tab.label}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
             {/* 2. Main Filter Area */}
             <div
-                className={`p-4 bg-gray-50/50 rounded-xl border border-gray-100 transition-opacity duration-200 overflow-visible relative z-30 ${loading ? 'opacity-60 pointer-events-none grayscale' : ''}`}
+                className={`p-4 bg-gray-50/50 rounded-xl border border-gray-100 transition-opacity duration-200 overflow-visible relative z-20 ${loading ? 'opacity-60 pointer-events-none grayscale' : ''}`}
                 role="tabpanel"
                 id={`panel-${activeTab}`}
                 aria-labelledby={`tab-${activeTab}`}
@@ -303,7 +353,7 @@ const DashboardFilters = ({
                         </div>
 
                         {/* Controls Group - Expanded */}
-                        <div className="flex flex-col md:flex-row items-stretch gap-3 w-full flex-1">
+                        <div className="flex flex-col md:flex-row items-center gap-3 w-full flex-1">
                             {/* Visual Calendar Picker */}
                             <div className="flex-1 w-full">
                                 <DateRangePicker
@@ -314,104 +364,113 @@ const DashboardFilters = ({
                                 />
                             </div>
 
-                            {/* Presets - Mono Charts Pill Style */}
-                            <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-full w-full md:w-auto justify-center md:justify-start ring-1 ring-gray-100">
-                                {['yesterday', 'week', 'month', 'lastMonth'].map(preset => (
-                                    <button
-                                        key={preset}
-                                        onClick={() => setDatePreset(preset)}
-                                        disabled={loading}
-                                        className={`
-                                            mono-pill flex-1 md:flex-none px-3.5 py-1.5 text-[10px] font-bold rounded-full transition-all uppercase tracking-wide whitespace-nowrap
-                                            ${activePreset === preset
-                                                ? 'bg-[#C3002F] text-white shadow shadow-red-200'
-                                                : 'text-gray-600 hover:bg-white hover:text-[#C3002F] hover:shadow-sm'
-                                            }
-                                            disabled:opacity-50 disabled:cursor-not-allowed
-                                        `}
-                                    >
-                                        {{
-                                            'yesterday': 'Ayer',
-                                            'week': 'Semana',
-                                            'month': 'Mes',
-                                            'lastMonth': 'Mes Ant.'
-                                        }[preset]}
-                                    </button>
-                                ))}
+                            {/* Presets - Sliding Segment Bar with Fixed Width and Centered Alignment */}
+                            <div className="p-1 bg-gray-100 rounded-full border border-gray-200/70 w-full md:w-[320px] shrink-0 select-none flex items-center">
+                                <div className="relative grid grid-cols-4 w-full items-center">
+                                    {/* Sliding Red Pill Indicator */}
+                                    {activePreset && (
+                                        <div
+                                            className="absolute top-0 bottom-0 rounded-full bg-[#C3002F] shadow-sm transition-transform duration-300 ease-out pointer-events-none"
+                                            style={{
+                                                width: '25%',
+                                                transform: `translateX(${
+                                                    activePreset === 'today' ? '0%' :
+                                                    activePreset === 'week' ? '100%' :
+                                                    activePreset === 'month' ? '200%' :
+                                                    '300%'
+                                                })`
+                                            }}
+                                        />
+                                    )}
+
+                                    {[
+                                        { id: 'today', label: 'Hoy' },
+                                        { id: 'week', label: 'Semana' },
+                                        { id: 'month', label: 'Mes' },
+                                        { id: 'lastMonth', label: 'Mes Ant.' }
+                                    ].map(preset => {
+                                        const isActive = activePreset === preset.id;
+                                        return (
+                                            <button
+                                                key={preset.id}
+                                                onClick={() => setDatePreset(preset.id)}
+                                                disabled={loading}
+                                                className={`
+                                                    relative z-10 py-1.5 flex items-center justify-center text-[10px] font-bold text-center uppercase tracking-wide transition-colors duration-200 rounded-full cursor-pointer whitespace-nowrap
+                                                    ${isActive
+                                                        ? 'text-white'
+                                                        : 'text-gray-600 hover:text-gray-900'
+                                                    }
+                                                    disabled:opacity-50 disabled:cursor-not-allowed
+                                                `}
+                                            >
+                                                {preset.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Specific Filters Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 relative z-20">
 
                     {/* Column 1: Line OR Location */}
-                    <div className="space-y-1.5 lg:col-span-2">
+                    <div className="space-y-1.5 lg:col-span-2 relative z-30">
                         {(activeTab === 'incoming' || activeTab === 'outgoing') ? (
                             <>
                                 <label
-                                    htmlFor="filter-line"
+                                    id="label-line"
                                     className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2"
                                 >
                                     <Phone className="h-2.5 w-2.5" aria-hidden="true" /> {activeTab === 'outgoing' ? 'Línea Origen' : 'Línea Receptora'}
                                 </label>
-                                <div className="relative group/select">
-                                    <select
-                                        id="filter-line"
+                                <div className="h-9 relative z-30">
+                                    <CustomSelect
                                         name="line"
+                                        options={lineOptions}
                                         value={filters.line || ''}
                                         onChange={onFilterChange}
+                                        placeholder="Todas las Líneas"
                                         disabled={loading}
-                                        className="w-full h-9 appearance-none bg-white border border-gray-100 rounded-lg px-3 py-1 text-xs font-bold text-gray-900 focus:border-nissan-red/30 focus:ring-4 focus:ring-nissan-red/5 outline-none transition-all cursor-pointer disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed shadow-sm"
-                                    >
-                                        <option value="">Todas las Líneas</option>
-                                        <option value="2878750303">Tuxtepec (287)</option>
-                                        <option value="9717120739">Juchitán (971-712)</option>
-                                        <option value="9716884348">Salina Cruz (971-688)</option>
-                                        <option value="CUAD" className="font-bold">BDC</option>
-                                    </select>
-                                    <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-3.5 w-3.5 text-gray-300 group-hover/select:text-nissan-red transition-colors" aria-hidden="true" />
+                                        ariaLabelledBy="label-line"
+                                    />
                                 </div>
                             </>
                         ) : activeTab === 'internal' ? (
                             <>
                                 <label
-                                    htmlFor="filter-location"
+                                    id="label-location"
                                     className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2"
                                 >
                                     <MapPin className="h-2.5 w-2.5" aria-hidden="true" /> Ubicación
                                 </label>
-                                <div className="relative group/select">
-                                    <select
-                                        id="filter-location"
+                                <div className="h-9 relative z-30">
+                                    <CustomSelect
                                         name="locationDestination"
+                                        options={locationOptions}
                                         value={filters.locationDestination || ''}
                                         onChange={onFilterChange}
+                                        placeholder="Todas las Ubicaciones"
                                         disabled={loading}
-                                        className="w-full h-9 appearance-none bg-white border border-gray-100 rounded-lg px-3 py-1 text-xs font-bold text-gray-900 focus:border-nissan-red/30 focus:ring-4 focus:ring-nissan-red/5 outline-none transition-all cursor-pointer disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed shadow-sm"
-                                    >
-                                        <option value="">Todas</option>
-                                        <option value="TX">Tuxtepec</option>
-                                        <option value="SC">Salina Cruz</option>
-                                        <option value="JT">Juchitán</option>
-                                        <option value="CB">BDC</option>
-                                    </select>
-                                    <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-3.5 w-3.5 text-gray-300 group-hover/select:text-nissan-red transition-colors" aria-hidden="true" />
+                                        ariaLabelledBy="label-location"
+                                    />
                                 </div>
                             </>
                         ) : null}
                     </div>
 
                     {/* Column 2: Extensions */}
-                    <div className="space-y-1.5 lg:col-span-2">
+                    <div className="space-y-1.5 lg:col-span-2 relative z-30">
                         <label
                             id="label-extensions"
                             className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2"
                         >
                             <Users className="h-2.5 w-2.5" aria-hidden="true" /> Extensiones
                         </label>
-                        <div className="h-9">
+                        <div className="h-9 relative z-30">
                             <MultiSelect
                                 options={destOptions}
                                 selected={filters.destination}
@@ -424,37 +483,31 @@ const DashboardFilters = ({
                     </div>
 
                     {/* Column 3: Disposition */}
-                    <div className="space-y-1.5 lg:col-span-2">
+                    <div className="space-y-1.5 lg:col-span-2 relative z-30">
                         <label
-                            htmlFor="filter-disposition"
+                            id="label-disposition"
                             className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2"
                         >
                             <Filter className="h-2.5 w-2.5" aria-hidden="true" /> Estado
                         </label>
-                        <div className="relative group/select">
-                            <select
-                                id="filter-disposition"
+                        <div className="h-9 relative z-30">
+                            <CustomSelect
                                 name="disposition"
-                                value={filters.disposition}
+                                options={dispositionOptions}
+                                value={filters.disposition || ''}
                                 onChange={onFilterChange}
+                                placeholder="Todos los Estados"
                                 disabled={loading}
-                                className="w-full h-9 appearance-none bg-white border border-gray-100 rounded-lg px-3 py-1 text-xs font-bold text-gray-900 focus:border-nissan-red/30 focus:ring-4 focus:ring-nissan-red/5 outline-none transition-all cursor-pointer disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed shadow-sm"
-                            >
-                                <option value="">Todos los Estados</option>
-                                <option value="ANSWERED">Contestadas</option>
-                                <option value="NO ANSWER">No Contestadas</option>
-                                <option value="BUSY">Ocupado</option>
-                                <option value="FAILED">Fallido</option>
-                            </select>
-                            <ChevronDown className="pointer-events-none absolute right-3 top-2.5 h-3.5 w-3.5 text-gray-300 group-hover/select:text-nissan-red transition-colors" aria-hidden="true" />
+                                ariaLabelledBy="label-disposition"
+                            />
                         </div>
                     </div>
 
                 </div>
-            </div >
+            </div>
 
             {/* 3. Footer / Active Filters / Actions */}
-            < div className="bg-white px-6 py-3 border-t border-gray-50 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.02)]" >
+            <div className="bg-white px-6 py-3 border-t border-gray-50 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.02)] relative z-10">
                 <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
 
                     {/* Active Filters List */}
@@ -472,9 +525,12 @@ const DashboardFilters = ({
                                     />
                                 ))}
                                 <button
-                                    onClick={onClearFilters}
+                                    onClick={() => {
+                                        setActivePreset('month');
+                                        if (onClearFilters) onClearFilters();
+                                    }}
                                     disabled={loading}
-                                    className="text-[10px] text-nissan-red hover:underline font-bold uppercase tracking-wider ml-3 disabled:text-gray-300 transition-colors"
+                                    className="text-[10px] text-[#C3002F] hover:underline font-bold uppercase tracking-wider ml-3 disabled:text-gray-300 transition-colors cursor-pointer"
                                 >
                                     Limpiar
                                 </button>

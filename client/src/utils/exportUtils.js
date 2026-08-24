@@ -337,7 +337,7 @@ export const exportChartsToPDF = async (stats = {}, filters = {}, configCharts =
             periodCategory = 'QUINCENAL';
         } else if (strToTest.includes('mensual') || strToTest.includes('mes') || strToTest.includes('monthly') || strToTest.includes('month')) {
             periodCategory = 'MENSUAL';
-        } else if (strToTest.includes('diario') || strToTest.includes('día') || strToTest.includes('dia') || strToTest.includes('yesterday')) {
+        } else if (strToTest.includes('diario') || strToTest.includes('día') || strToTest.includes('dia') || strToTest.includes('yesterday') || strToTest.includes('today') || strToTest.includes('hoy')) {
             periodCategory = 'DIARIO';
         } else {
             periodCategory = 'PERSONALIZADO';

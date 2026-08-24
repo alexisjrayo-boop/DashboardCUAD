@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 
 const BAR_PALETTE = [
-    '#EF4444', // Red (Domingo)
-    '#3B82F6', // Blue (Lunes)
-    '#10B981', // Emerald (Martes)
-    '#F59E0B', // Amber (Miércoles)
-    '#8B5CF6', // Purple (Jueves)
-    '#EC4899', // Pink (Viernes)
-    '#06B6D4'  // Cyan (Sábado)
+    '#6750A4', // Primary Purple (Material 3)
+    '#0288D1', // Material Cyan/Blue
+    '#00897B', // Material Teal
+    '#F57C00', // Material Orange
+    '#E91E63', // Material Pink
+    '#3949AB', // Material Indigo
+    '#8E24AA'  // Material Purple Medium
 ];
 
 const MonoBarChart = ({ data, onClick, barColor, horizontal = false }) => {
@@ -24,22 +24,20 @@ const MonoBarChart = ({ data, onClick, barColor, horizontal = false }) => {
 
     if (count === 0) return null;
 
+    // Unify all bars in the chart to use a single color (Monocolor)
+    const color = (typeof barColor === 'string' ? barColor : null)
+        || (typeof datasetColors === 'string' ? datasetColors : null)
+        || (Array.isArray(datasetColors) && typeof datasetColors[0] === 'string' ? datasetColors[0] : null)
+        || BAR_PALETTE[0];
+
     return (
         <div className="w-full h-full flex flex-col justify-between p-1 select-none">
-            {/* Vertical Colorful Pill Bar Visualizer */}
+            {/* Vertical Monocolor Pill Bar Visualizer */}
             {!horizontal ? (
                 <div className="w-full h-full flex-1 flex items-end justify-around gap-2.5 pt-2 pb-1 min-h-[260px]">
                     {values.map((val, idx) => {
-                        const heightPct = Math.max((val / maxVal) * 100, 4);
+                        const heightPct = val > 0 ? Math.max((val / maxVal) * 100, 4) : 0;
                         const isHovered = hoveredIdx === idx;
-
-                        const rawColor = Array.isArray(datasetColors)
-                            ? datasetColors[idx]
-                            : (typeof datasetColors === 'string' ? datasetColors : null);
-
-                        const color = rawColor
-                            || (typeof barColor === 'string' ? barColor : null)
-                            || BAR_PALETTE[idx % BAR_PALETTE.length];
 
                         return (
                             <div
@@ -57,9 +55,9 @@ const MonoBarChart = ({ data, onClick, barColor, horizontal = false }) => {
                                 )}
 
                                 {/* Outer Track with overflow-hidden (Flush fit bottom, no white gap) */}
-                                <div className="w-full max-w-[38px] h-full min-h-[240px] bg-gray-100/90 rounded-full flex flex-col justify-end overflow-hidden border border-gray-200/60 shadow-2xs group-hover:border-gray-400 transition-colors">
+                                <div className="w-full max-w-[38px] h-full min-h-[240px] bg-gray-100/90 rounded-md flex flex-col justify-end overflow-hidden border border-gray-200/60 shadow-2xs group-hover:border-gray-400 transition-colors">
                                     <div
-                                        className="w-full rounded-t-full transition-all duration-500 ease-out"
+                                        className="w-full rounded-t-sm transition-all duration-1000 ease-out"
                                         style={{
                                             height: `${heightPct}%`,
                                             backgroundColor: color,
@@ -78,19 +76,11 @@ const MonoBarChart = ({ data, onClick, barColor, horizontal = false }) => {
                     })}
                 </div>
             ) : (
-                /* Horizontal Colorful Pill Bar Visualizer */
+                /* Horizontal Monocolor Pill Bar Visualizer */
                 <div className="w-full flex-1 flex flex-col justify-around gap-2.5 py-2 min-h-[240px]">
                     {values.map((val, idx) => {
-                        const widthPct = Math.max((val / maxVal) * 100, 5);
+                        const widthPct = val > 0 ? Math.max((val / maxVal) * 100, 5) : 0;
                         const isHovered = hoveredIdx === idx;
-
-                        const rawColor = Array.isArray(datasetColors)
-                            ? datasetColors[idx]
-                            : (typeof datasetColors === 'string' ? datasetColors : null);
-
-                        const color = rawColor
-                            || (typeof barColor === 'string' ? barColor : null)
-                            || BAR_PALETTE[idx % BAR_PALETTE.length];
 
                         return (
                             <div
@@ -103,9 +93,9 @@ const MonoBarChart = ({ data, onClick, barColor, horizontal = false }) => {
                                 <span className={`w-28 text-[11px] font-bold truncate text-right shrink-0 transition-colors ${isHovered ? 'text-gray-900' : 'text-gray-600'}`}>
                                     {labels[idx]}
                                 </span>
-                                <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden border border-gray-100 flex items-center group-hover:border-gray-300">
+                                <div className="flex-1 bg-gray-100 rounded-md h-4 overflow-hidden border border-gray-100 flex items-center group-hover:border-gray-300">
                                     <div
-                                        className="h-full rounded-r-full transition-all duration-500 ease-out"
+                                        className="h-full rounded-r-sm transition-all duration-1000 ease-out"
                                         style={{
                                             width: `${widthPct}%`,
                                             backgroundColor: color,

@@ -426,4 +426,36 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
-}
+}
+
+/* Modal Zoom-Out Entrance & Exit Animations */
+@keyframes modalZoomOutIn {
+  0% {
+    opacity: 0;
+    transform: scale(1.12) translateY(-10px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0px);
+  }
+}
+
+.animate-zoom-out {
+  animation: modalZoomOutIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes backdropFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-backdrop {
+  animation: backdropFade 0.25s ease-out forwards;
+}
+

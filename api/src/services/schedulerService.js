@@ -242,7 +242,15 @@ async function processAndSaveRows(rows) {
     }
 }
 
+let isSyncing = false;
+
 async function fetchAndSaveDailyCDRs(options = {}) {
+    if (isSyncing) {
+        console.log(`[${new Date().toISOString()}] Sincronización en curso omitida para evitar solapamiento.`);
+        return;
+    }
+
+    isSyncing = true;
     console.log(`[${new Date().toISOString()}] Iniciando proceso de sincronización de CDRs`, options);
 
     const userid = process.env.TELMEX_USERID;
@@ -250,6 +258,7 @@ async function fetchAndSaveDailyCDRs(options = {}) {
 
     if (!userid || !userpass) {
         console.error('✗ Error: Credenciales de Telmex no configuradas en .env');
+        isSyncing = false;
         return;
     }
 
@@ -291,7 +300,7 @@ async function fetchAndSaveDailyCDRs(options = {}) {
             const chunkFromStr = formatDateForApi(currentDate);
             const chunkToStr = formatDateForApi(chunkEnd);
 
-            console.log(`  >> Procesando mes: ${chunkFromStr} al ${chunkToStr}`);
+            console.log(`  >> Procesando periodo: ${chunkFromStr} al ${chunkToStr}`);
 
             try {
                 // 2. Consultar API para este chunk
@@ -318,10 +327,12 @@ async function fetchAndSaveDailyCDRs(options = {}) {
 
     } catch (error) {
         console.error('✗ Error general en el proceso de sincronización:', error.message);
+    } finally {
+        isSyncing = false;
     }
 }
 
-// Función para verificar si la BD está vacía y ejecutar fetch inicial
+// Función para ejecutar sincronización inicial al arrancar el servidor
 async function checkAndRunInitialFetch() {
     const connection = await pool.getConnection();
     try {
@@ -330,12 +341,12 @@ async function checkAndRunInitialFetch() {
 
         if (count === 0) {
             console.log('⚠ BD vacía detectada al inicio.');
-            console.log('🔄 Iniciando carga inicial automática...');
-            // Ejecutar sin await para no bloquear el inicio del servidor, o con await si preferimos esperar
-            fetchAndSaveDailyCDRs().catch(err => console.error('✗ Error en carga inicial:', err));
+            console.log('🔄 Iniciando carga histórica completa desde inicio de año...');
         } else {
-            console.log(`✓ BD contiene ${count} registros. No se requiere carga inicial.`);
+            console.log(`✓ BD contiene ${count} registros. Iniciando sincronización de registros faltantes...`);
         }
+        // Sincronizar siempre al momento de activarse (inicio del servidor)
+        fetchAndSaveDailyCDRs().catch(err => console.error('✗ Error en sincronización inicial:', err));
     } catch (error) {
         console.error('✗ Error verificando estado de BD:', error);
     } finally {
@@ -366,8 +377,8 @@ function parseDate(dateStr) {
     }
 }
 
-// Programar tarea para las 01:00 AM todos los días
-const task = cron.schedule('0 1 * * *', fetchAndSaveDailyCDRs, {
+// Programar tarea para ejecutarse cada 5 minutos
+const task = cron.schedule('*/5 * * * *', fetchAndSaveDailyCDRs, {
     scheduled: false
 });
 
@@ -381,7 +392,7 @@ module.exports = {
     startScheduler: () => {
         task.start();
         emailTask.start();
-        console.log('✓ Scheduler de CDRs iniciado: Ejecución diaria a las 01:00 AM');
+        console.log('✓ Scheduler de CDRs iniciado: Ejecución automática cada 5 minutos');
         console.log('✓ Scheduler de Reportes de Correo iniciado: Ejecución diaria a las 07:00 AM');
         
         // Ejecución inicial después de 15 segundos para procesar reportes pendientes

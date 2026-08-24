@@ -1,6 +1,6 @@
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, HelpCircle } from 'lucide-react';
 
-const StatCard = ({ title, value, subtext, icon: Icon, trend, color = "blue", onClick, percentage }) => {
+const StatCard = ({ title, value, subtext, icon: Icon, trend, color = "blue", onClick, percentage, info }) => {
     const colorClasses = {
         nissan: "text-[#C3002F] bg-red-50 ring-red-100",
         blue: "text-blue-600 bg-blue-50 ring-blue-100",
@@ -46,7 +46,7 @@ const StatCard = ({ title, value, subtext, icon: Icon, trend, color = "blue", on
             tabIndex={onClick ? "0" : undefined}
             role={onClick ? "button" : undefined}
             aria-label={onClick ? `Ver detalles de ${title}` : undefined}
-            className={`relative bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 group hover:-translate-y-0.5 ${onClick ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C3002F]/50' : ''}`}
+            className={`relative bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 group hover:-translate-y-0.5 hover:z-50 focus-within:z-50 ${onClick ? 'cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#C3002F]/50' : ''}`}
         >
             <div className="flex items-start justify-between mb-4">
                 <div
@@ -55,15 +55,46 @@ const StatCard = ({ title, value, subtext, icon: Icon, trend, color = "blue", on
                 >
                     <Icon className="h-5 w-5" />
                 </div>
-                {trend !== undefined && trend !== null && (
-                    <div
-                        className={`mono-pill flex items-center px-2.5 py-1 text-[10px] font-bold tracking-tight rounded-full ${trend > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}
-                        aria-label={`${trend > 0 ? 'Incremento' : 'Decremento'} del ${Math.abs(trend)}%`}
-                    >
-                        {trend > 0 ? <ArrowUp className="h-3 w-3 mr-1" aria-hidden="true" /> : <ArrowDown className="h-3 w-3 mr-1" aria-hidden="true" />}
-                        {Math.abs(trend)}%
-                    </div>
-                )}
+
+                {/* Top Right Actions (Trend & Info Icon) */}
+                <div className="flex items-center gap-1.5">
+                    {trend !== undefined && trend !== null && (
+                        <div
+                            className={`mono-pill flex items-center px-2.5 py-1 text-[10px] font-bold tracking-tight rounded-full ${trend > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}
+                            aria-label={`${trend > 0 ? 'Incremento' : 'Decremento'} del ${Math.abs(trend)}%`}
+                        >
+                            {trend > 0 ? <ArrowUp className="h-3 w-3 mr-1" aria-hidden="true" /> : <ArrowDown className="h-3 w-3 mr-1" aria-hidden="true" />}
+                            {Math.abs(trend)}%
+                        </div>
+                    )}
+
+                    {info && (
+                        <div className="relative group/info flex items-center">
+                            <button
+                                type="button"
+                                onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => e.stopPropagation()}
+                                aria-label={`Información sobre ${title}`}
+                                className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors focus:outline-none cursor-help flex items-center justify-center"
+                            >
+                                <HelpCircle className="h-4 w-4" />
+                            </button>
+
+                            {/* Tooltip Card (Foreground z-[100]) */}
+                            <div className="absolute right-0 top-full mt-2 hidden group-hover/info:flex flex-col w-64 p-3 bg-gray-900/95 text-white text-[11px] font-medium rounded-xl shadow-2xl border border-white/10 backdrop-blur-xl z-[100] pointer-events-none transition-all duration-200">
+                                <div className="flex items-center gap-1.5 font-bold text-[10px] text-gray-300 uppercase tracking-wider mb-1.5 border-b border-white/10 pb-1">
+                                    <HelpCircle className="h-3 w-3 text-sky-400 shrink-0" />
+                                    <span className="truncate">{title}</span>
+                                </div>
+                                <p className="leading-relaxed text-gray-200 text-[10.5px]">
+                                    {info}
+                                </p>
+                                {/* Arrow */}
+                                <div className="absolute -top-1 right-2.5 w-2 h-2 bg-gray-900/95 rotate-45 border-l border-t border-white/10"></div>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="space-y-1">

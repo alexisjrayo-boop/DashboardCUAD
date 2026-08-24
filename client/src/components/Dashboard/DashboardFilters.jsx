@@ -345,7 +345,7 @@ const DashboardFilters = ({
             >
 
                 {/* Date Selection Row (Always Visible) */}
-                <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 mb-4 relative z-30">
+                <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 mb-4 relative z-40">
                     <div className="flex flex-col lg:flex-row items-center justify-start gap-4">
                         {/* Label Group - Minimalist */}
                         <div className="min-w-fit px-2">
@@ -415,10 +415,10 @@ const DashboardFilters = ({
                 </div>
 
                 {/* Specific Filters Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 relative z-20">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 relative z-30">
 
                     {/* Column 1: Line OR Location */}
-                    <div className="space-y-1.5 lg:col-span-2 relative z-30">
+                    <div className="space-y-1.5 lg:col-span-2 relative z-30 focus-within:z-50 hover:z-40">
                         {(activeTab === 'incoming' || activeTab === 'outgoing') ? (
                             <>
                                 <label
@@ -463,14 +463,14 @@ const DashboardFilters = ({
                     </div>
 
                     {/* Column 2: Extensions */}
-                    <div className="space-y-1.5 lg:col-span-2 relative z-30">
+                    <div className="space-y-1.5 lg:col-span-2 relative z-20 focus-within:z-50 hover:z-40">
                         <label
                             id="label-extensions"
                             className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2"
                         >
                             <Users className="h-2.5 w-2.5" aria-hidden="true" /> Extensiones
                         </label>
-                        <div className="h-9 relative z-30">
+                        <div className="h-9 relative z-20">
                             <MultiSelect
                                 options={destOptions}
                                 selected={filters.destination}
@@ -483,14 +483,14 @@ const DashboardFilters = ({
                     </div>
 
                     {/* Column 3: Disposition */}
-                    <div className="space-y-1.5 lg:col-span-2 relative z-30">
+                    <div className="space-y-1.5 lg:col-span-2 relative z-10 focus-within:z-50 hover:z-40">
                         <label
                             id="label-disposition"
                             className="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2"
                         >
                             <Filter className="h-2.5 w-2.5" aria-hidden="true" /> Estado
                         </label>
-                        <div className="h-9 relative z-30">
+                        <div className="h-9 relative z-10">
                             <CustomSelect
                                 name="disposition"
                                 options={dispositionOptions}

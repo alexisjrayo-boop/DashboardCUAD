@@ -88,7 +88,7 @@ const MultiSelect = ({ options, selected, onChange, placeholder = 'Select option
     };
 
     return (
-        <div className={`relative w-full group/select ${disabled ? 'opacity-60 cursor-not-allowed' : ''} ${isOpen ? 'z-50' : 'z-10'}`} ref={dropdownRef} onKeyDown={handleKeyDown}>
+        <div className={`relative w-full group/select ${disabled ? 'opacity-60 cursor-not-allowed' : ''} ${isOpen ? 'z-[100]' : 'z-10'}`} ref={dropdownRef} onKeyDown={handleKeyDown}>
             <button
                 type="button"
                 onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -113,7 +113,7 @@ const MultiSelect = ({ options, selected, onChange, placeholder = 'Select option
 
             {isOpen && (
                 <div
-                    className="absolute z-50 mt-1 w-full bg-white shadow-2xl max-h-60 rounded-xl py-1 text-base ring-1 ring-black/10 border border-gray-200 overflow-auto focus:outline-none sm:text-sm"
+                    className="absolute z-[100] mt-1 w-full bg-white shadow-2xl max-h-60 rounded-xl py-1 text-base ring-1 ring-black/10 border border-gray-200 overflow-auto focus:outline-none sm:text-sm"
                     role="listbox"
                     aria-multiselectable="true"
                     ref={listboxRef}

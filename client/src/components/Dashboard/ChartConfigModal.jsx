@@ -210,26 +210,28 @@ const ChartConfigModal = ({ isOpen, onClose }) => {
         let endDate = formatDbDate(now);
         let periodName = 'Reporte Programado';
 
-        if (filters && filters.startDate && filters.endDate) {
-            startDate = filters.startDate;
-            endDate = filters.endDate;
-            periodName = `Periodo Seleccionado (${filters.startDate.replace('T', ' ').substring(0, 10)} al ${filters.endDate.replace('T', ' ').substring(0, 10)})`;
-        } else if (recipient.frequency === 'diario') {
+        const freq = recipient?.frequency || 'semanal';
+
+        if (freq === 'diario') {
             const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
             startDate = formatDbDate(startToday);
             periodName = `Reporte Diario (${formatShortDate(now)})`;
-        } else if (recipient.frequency === 'semanal') {
+        } else if (freq === 'semanal') {
             const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             startDate = formatDbDate(sevenDaysAgo);
             periodName = `Reporte Semanal (${formatShortDate(sevenDaysAgo)} al ${formatShortDate(now)})`;
-        } else if (recipient.frequency === 'quincenal') {
+        } else if (freq === 'quincenal') {
             const fifteenDaysAgo = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
             startDate = formatDbDate(fifteenDaysAgo);
             periodName = `Reporte Quincenal (${formatShortDate(fifteenDaysAgo)} al ${formatShortDate(now)})`;
-        } else if (recipient.frequency === 'mensual') {
+        } else if (freq === 'mensual') {
             const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
             startDate = formatDbDate(firstOfMonth);
             periodName = `Reporte Mensual (${formatShortDate(firstOfMonth)} al ${formatShortDate(now)})`;
+        } else if (filters && filters.startDate && filters.endDate) {
+            startDate = filters.startDate;
+            endDate = filters.endDate;
+            periodName = `Periodo Personalizado (${filters.startDate.replace('T', ' ').substring(0, 10)} al ${filters.endDate.replace('T', ' ').substring(0, 10)})`;
         }
 
         const buildParams = (sDate) => {
@@ -287,11 +289,13 @@ const ChartConfigModal = ({ isOpen, onClose }) => {
     const handleTestRecipientReport = async (recipient) => {
         setTestingId(recipient.id || 'form');
         try {
-            const { fetchedRows, periodName } = await fetchTestRows(recipient);
+            const { fetchedRows, periodName, startDate, endDate } = await fetchTestRows(recipient);
 
             const testStats = calculateGeneralStats(fetchedRows, extensionsMap);
             const testFilters = {
                 ...filters,
+                startDate: startDate,
+                endDate: endDate,
                 frequency: recipient.frequency,
                 calltype: recipient.call_type,
                 line: recipient.phone_lines,
@@ -299,7 +303,7 @@ const ChartConfigModal = ({ isOpen, onClose }) => {
             };
 
             await exportChartsToPDF(testStats, testFilters, [], fetchedRows, extensionsMap);
-            alert(`✓ Vista previa generada exitosamente para "${recipient.recipient_name || 'Destinatario'}".\n\nTotal de llamadas recuperadas desde MySQL: ${fetchedRows.length.toLocaleString()} llamadas.`);
+            alert(`✓ Vista previa generada exitosamente para "${recipient.recipient_name || 'Destinatario'}".\n\nPeriodo: ${startDate.substring(0, 10)} al ${endDate.substring(0, 10)}\nTotal de llamadas: ${fetchedRows.length.toLocaleString()} llamadas.`);
         } catch (err) {
             console.error('Error generando vista previa:', err);
             alert('Ocurrió un error al generar la vista previa del reporte: ' + err.message);
@@ -317,6 +321,8 @@ const ChartConfigModal = ({ isOpen, onClose }) => {
             const testStats = calculateGeneralStats(fetchedRows, extensionsMap);
             const testFilters = {
                 ...filters,
+                startDate: startDate,
+                endDate: endDate,
                 frequency: recipient.frequency,
                 calltype: recipient.call_type,
                 line: recipient.phone_lines,

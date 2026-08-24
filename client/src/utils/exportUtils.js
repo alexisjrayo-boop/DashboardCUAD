@@ -328,10 +328,35 @@ export const exportChartsToPDF = async (stats = {}, filters = {}, configCharts =
         };
 
         // ── Determinación de Tipo de Reporte, Período y Líneas ────────────────
+        let diffDays = null;
+        if (filters.startDate && filters.endDate) {
+            try {
+                const sStr = String(filters.startDate).replace(' ', 'T');
+                const eStr = String(filters.endDate).replace(' ', 'T');
+                const d1 = new Date(sStr);
+                const d2 = new Date(eStr);
+                if (!isNaN(d1.getTime()) && !isNaN(d2.getTime())) {
+                    diffDays = Math.max(1, Math.round(Math.abs(d2 - d1) / (1000 * 60 * 60 * 24)));
+                }
+            } catch (e) {}
+        }
+
         let periodCategory = 'PERSONALIZADO';
         const strToTest = `${filters.frequency || ''} ${filters.customPeriodName || ''} ${filters.period || ''}`.toLowerCase();
 
-        if (strToTest.includes('semanal') || strToTest.includes('semana') || strToTest.includes('weekly') || strToTest.includes('week')) {
+        if (diffDays !== null) {
+            if (diffDays <= 1) {
+                periodCategory = 'DIARIO';
+            } else if (diffDays >= 2 && diffDays <= 8) {
+                periodCategory = 'SEMANAL';
+            } else if (diffDays >= 9 && diffDays <= 18) {
+                periodCategory = 'QUINCENAL';
+            } else if (diffDays >= 19 && diffDays <= 32) {
+                periodCategory = 'MENSUAL';
+            } else {
+                periodCategory = 'PERSONALIZADO';
+            }
+        } else if (strToTest.includes('semanal') || strToTest.includes('semana') || strToTest.includes('weekly') || strToTest.includes('week')) {
             periodCategory = 'SEMANAL';
         } else if (strToTest.includes('quincenal') || strToTest.includes('quincena')) {
             periodCategory = 'QUINCENAL';

@@ -7,11 +7,73 @@ const { pool } = require('../config/db');
 const cdrService = require('../services/cdrService');
 
 // ==========================================
-// 1. MANEJO DE CONFIGURACIÓN DE REPORTES
+// 1. MANEJO DE CONFIGURACIÓN DE REPORTES (SINCRONIZADO CON USUARIOS)
 // ==========================================
+
+// Sincronización automática entre tabla users y email_report_configs
+async function syncUsersWithReportConfigs() {
+    try {
+        // 1. Obtener todos los usuarios con correo
+        const [users] = await pool.query('SELECT id, name, email, receive_reports FROM users WHERE email IS NOT NULL AND email != ""');
+        const [configs] = await pool.query('SELECT * FROM email_report_configs');
+
+        const configEmails = new Set(configs.map(c => (c.recipient_email || '').toLowerCase().trim()));
+
+        // Sincronizar usuarios -> configs
+        for (const u of users) {
+            const userEmail = (u.email || '').toLowerCase().trim();
+            if (!userEmail) continue;
+
+            if (u.receive_reports === 1 || u.receive_reports === true) {
+                if (!configEmails.has(userEmail)) {
+                    // Insertar en configs
+                    await pool.query(
+                        `INSERT INTO email_report_configs 
+                         (recipient_name, name, recipient_email, active, frequency, phone_lines, call_type, format) 
+                         VALUES (?, ?, ?, 1, 'semanal', 'all', '2', 'pdf')`,
+                        [u.name || userEmail.split('@')[0], u.name || userEmail.split('@')[0], userEmail]
+                    );
+                    configEmails.add(userEmail);
+                } else {
+                    // Actualizar nombre si cambió
+                    await pool.query(
+                        'UPDATE email_report_configs SET recipient_name = ?, name = ?, active = 1 WHERE LOWER(recipient_email) = ?',
+                        [u.name || userEmail.split('@')[0], u.name || userEmail.split('@')[0], userEmail]
+                    );
+                }
+            }
+        }
+
+        // Sincronizar configs -> usuarios (por si se agregaron destinatarios antiguos)
+        for (const c of configs) {
+            const cEmail = (c.recipient_email || '').toLowerCase().trim();
+            if (!cEmail) continue;
+
+            const [existingUser] = await pool.query('SELECT id FROM users WHERE LOWER(email) = ?', [cEmail]);
+            if (existingUser.length === 0) {
+                // Crear usuario correspondiente para mantener integridad
+                const crypto = require('crypto');
+                const token = crypto.randomBytes(32).toString('hex');
+                const expires = new Date(Date.now() + 24 * 3600 * 1000);
+                const autoUsername = cEmail.split('@')[0];
+
+                await pool.query(
+                    'INSERT INTO users (username, email, password, name, role, receive_reports, reset_token, reset_token_expires) VALUES (?, ?, NULL, ?, "user", ?, ?, ?)',
+                    [autoUsername, cEmail, c.recipient_name || c.name || autoUsername, c.active === 1 ? 1 : 0, token, expires]
+                );
+            } else {
+                // Sincronizar estado de reportes en usuario
+                await pool.query('UPDATE users SET receive_reports = ? WHERE id = ?', [c.active === 1 ? 1 : 0, existingUser[0].id]);
+            }
+        }
+    } catch (e) {
+        console.error('Error sincronizando users con email_report_configs:', e);
+    }
+}
 
 exports.getEmailReportConfigs = async (req, res) => {
     try {
+        await syncUsersWithReportConfigs();
         const [configs] = await pool.query('SELECT * FROM email_report_configs ORDER BY created_at DESC');
         res.json({ success: true, data: configs, configs });
     } catch (error) {
@@ -22,36 +84,71 @@ exports.getEmailReportConfigs = async (req, res) => {
 
 exports.saveEmailReportConfig = async (req, res) => {
     const targetId = req.params.id || req.body.id;
-    const recipient_email = req.body.recipient_email;
-    const recipient_name = req.body.recipient_name || req.body.name || 'Destinatario';
+    const rawEmail = req.body.recipient_email || req.body.email || '';
+    const recipient_email = rawEmail.trim().toLowerCase();
+    const recipient_name = (req.body.recipient_name || req.body.name || recipient_email.split('@')[0] || 'Destinatario').trim();
     const active = req.body.active !== undefined ? (req.body.active ? 1 : 0) : 1;
     const frequency = req.body.frequency || 'semanal';
     const phone_lines = req.body.phone_lines || 'all';
     const call_type = req.body.call_type || '2';
     const format = req.body.format || 'pdf';
 
-    if (!recipient_email || !recipient_email.trim()) {
-        return res.status(400).json({ error: 'El correo electrónico es obligatorio' });
+    if (!recipient_email || !recipient_email.includes('@')) {
+        return res.status(400).json({ error: 'El correo electrónico es obligatorio y debe ser válido' });
     }
 
     try {
+        let configId = targetId;
+
         if (targetId && targetId !== 'undefined' && targetId !== 'null') {
             await pool.query(
                 `UPDATE email_report_configs 
                  SET recipient_name = ?, name = ?, recipient_email = ?, active = ?, frequency = ?, phone_lines = ?, call_type = ?, format = ? 
                  WHERE id = ?`,
-                [recipient_name, recipient_name, recipient_email.trim(), active, frequency, phone_lines, call_type, format, targetId]
+                [recipient_name, recipient_name, recipient_email, active, frequency, phone_lines, call_type, format, targetId]
             );
-            res.json({ success: true, message: 'Destinatario actualizado exitosamente' });
         } else {
-            const [result] = await pool.query(
-                `INSERT INTO email_report_configs 
-                 (recipient_name, name, recipient_email, active, frequency, phone_lines, call_type, format) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                [recipient_name, recipient_name, recipient_email.trim(), active, frequency, phone_lines, call_type, format]
-            );
-            res.status(201).json({ success: true, message: 'Destinatario agregado exitosamente', id: result.insertId });
+            // Verificar si ya existe el correo en configs
+            const [existingConfig] = await pool.query('SELECT id FROM email_report_configs WHERE LOWER(recipient_email) = ?', [recipient_email]);
+            if (existingConfig.length > 0) {
+                configId = existingConfig[0].id;
+                await pool.query(
+                    `UPDATE email_report_configs 
+                     SET recipient_name = ?, name = ?, active = ?, frequency = ?, phone_lines = ?, call_type = ?, format = ? 
+                     WHERE id = ?`,
+                    [recipient_name, recipient_name, active, frequency, phone_lines, call_type, format, configId]
+                );
+            } else {
+                const [result] = await pool.query(
+                    `INSERT INTO email_report_configs 
+                     (recipient_name, name, recipient_email, active, frequency, phone_lines, call_type, format) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [recipient_name, recipient_name, recipient_email, active, frequency, phone_lines, call_type, format]
+                );
+                configId = result.insertId;
+            }
         }
+
+        // Sincronizar con tabla users
+        const [existingUser] = await pool.query('SELECT id FROM users WHERE LOWER(email) = ?', [recipient_email]);
+        if (existingUser.length > 0) {
+            await pool.query(
+                'UPDATE users SET name = ?, receive_reports = ? WHERE id = ?',
+                [recipient_name, active, existingUser[0].id]
+            );
+        } else {
+            const crypto = require('crypto');
+            const token = crypto.randomBytes(32).toString('hex');
+            const expires = new Date(Date.now() + 24 * 3600 * 1000);
+            const autoUsername = recipient_email.split('@')[0];
+
+            await pool.query(
+                'INSERT INTO users (username, email, password, name, role, receive_reports, reset_token, reset_token_expires) VALUES (?, ?, NULL, ?, "user", ?, ?, ?)',
+                [autoUsername, recipient_email, recipient_name, active, token, expires]
+            );
+        }
+
+        res.json({ success: true, message: 'Configuración guardada y sincronizada exitosamente', id: configId });
     } catch (error) {
         console.error('Error saving report config:', error);
         res.status(500).json({ error: 'Error del servidor al guardar la configuración' });
@@ -61,6 +158,13 @@ exports.saveEmailReportConfig = async (req, res) => {
 exports.deleteEmailReportConfig = async (req, res) => {
     const { id } = req.params;
     try {
+        const [toDelete] = await pool.query('SELECT recipient_email FROM email_report_configs WHERE id = ?', [id]);
+        if (toDelete.length > 0 && toDelete[0].recipient_email) {
+            const emailToDelete = toDelete[0].recipient_email.toLowerCase().trim();
+            // Desactivar recibir reportes en usuario
+            await pool.query('UPDATE users SET receive_reports = 0 WHERE LOWER(email) = ?', [emailToDelete]);
+        }
+
         await pool.query('DELETE FROM email_report_configs WHERE id = ?', [id]);
         res.json({ success: true, message: 'Destinatario eliminado exitosamente' });
     } catch (error) {

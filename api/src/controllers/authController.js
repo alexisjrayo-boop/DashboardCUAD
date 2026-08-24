@@ -439,14 +439,23 @@ exports.updateUser = async (req, res) => {
             [name, cleanEmail, profile_picture || null, role || 'user', receive_reports ? 1 : 0, id]
         );
 
-        // Sincronizar reportes si aplica
-        if (receive_reports && cleanEmail) {
-            const [existingConfig] = await pool.query('SELECT id FROM email_report_configs WHERE recipient_email = ?', [cleanEmail]);
-            if (existingConfig.length === 0) {
-                await pool.query(
-                    'INSERT INTO email_report_configs (recipient_name, recipient_email, periodicity, line, active, frequency, phone_lines, call_type, format) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                    [name, cleanEmail, 'semanal', 'all', 1, 'semanal', 'all', '2', 'pdf']
-                );
+        // Sincronizar reportes
+        if (cleanEmail) {
+            if (receive_reports) {
+                const [existingConfig] = await pool.query('SELECT id FROM email_report_configs WHERE LOWER(recipient_email) = ?', [cleanEmail]);
+                if (existingConfig.length === 0) {
+                    await pool.query(
+                        'INSERT INTO email_report_configs (recipient_name, name, recipient_email, periodicity, line, active, frequency, phone_lines, call_type, format) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        [name, name, cleanEmail, 'semanal', 'all', 1, 'semanal', 'all', '2', 'pdf']
+                    );
+                } else {
+                    await pool.query(
+                        'UPDATE email_report_configs SET recipient_name = ?, name = ?, active = 1 WHERE id = ?',
+                        [name, name, existingConfig[0].id]
+                    );
+                }
+            } else {
+                await pool.query('UPDATE email_report_configs SET active = 0 WHERE LOWER(recipient_email) = ?', [cleanEmail]);
             }
         }
 
@@ -470,9 +479,15 @@ exports.deleteUser = async (req, res) => {
             return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta' });
         }
 
-        const [userToDelete] = await pool.query('SELECT username FROM users WHERE id = ?', [id]);
-        if (userToDelete.length > 0 && userToDelete[0].username === 'admin') {
-            return res.status(403).json({ error: 'No se puede eliminar el usuario administrador maestro' });
+        const [userToDelete] = await pool.query('SELECT username, email FROM users WHERE id = ?', [id]);
+        if (userToDelete.length > 0) {
+            if (userToDelete[0].username === 'admin') {
+                return res.status(403).json({ error: 'No se puede eliminar el usuario administrador maestro' });
+            }
+            if (userToDelete[0].email) {
+                // Eliminar de destinatarios de reportes
+                await pool.query('DELETE FROM email_report_configs WHERE LOWER(recipient_email) = ?', [userToDelete[0].email.toLowerCase().trim()]);
+            }
         }
 
         await pool.query('DELETE FROM users WHERE id = ?', [id]);

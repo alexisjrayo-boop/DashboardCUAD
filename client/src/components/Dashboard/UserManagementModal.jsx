@@ -6,6 +6,28 @@ const UserManagementModal = ({ isOpen, onClose }) => {
     const [view, setView] = useState('list'); // 'list' or 'form'
     const [editMode, setEditMode] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [isClosing, setIsClosing] = useState(false);
+
+    const handleClose = () => {
+        if (isClosing) return;
+        setIsClosing(true);
+        setTimeout(() => {
+            setIsClosing(false);
+            onClose();
+        }, 270);
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                handleClose();
+            }
+        };
+        if (isOpen) {
+            window.addEventListener('keydown', handleKeyDown);
+        }
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, isClosing]);
 
     const [name, setName] = useState('');
     const [username, setUsername] = useState('');
@@ -129,8 +151,14 @@ const UserManagementModal = ({ isOpen, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-backdrop">
-            <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 animate-expand-from-button relative flex flex-col max-h-[90vh]">
+        <div
+            className={`fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm ${isClosing ? 'animate-backdrop-out' : 'animate-backdrop'}`}
+            onClick={handleClose}
+        >
+            <div
+                className={`bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-gray-100 relative flex flex-col max-h-[90vh] ${isClosing ? 'animate-shrink-to-button' : 'animate-expand-from-button'}`}
+                onClick={e => e.stopPropagation()}
+            >
                 {/* Accent Top Bar */}
                 <div className="h-1.5 bg-nissan-red shrink-0"></div>
 
@@ -140,7 +168,7 @@ const UserManagementModal = ({ isOpen, onClose }) => {
                         {view === 'form' && (
                             <button
                                 onClick={() => { setView('list'); resetForm(); }}
-                                className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-nissan-red transition-all border border-transparent hover:border-gray-100 shadow-sm"
+                                className="p-2 hover:bg-white rounded-lg text-gray-400 hover:text-nissan-red transition-all border border-transparent hover:border-gray-100 shadow-sm cursor-pointer"
                             >
                                 <ArrowLeft className="h-5 w-5" />
                             </button>
@@ -160,8 +188,9 @@ const UserManagementModal = ({ isOpen, onClose }) => {
                         </div>
                     </div>
                     <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-white hover:shadow-md rounded-xl text-gray-400 hover:text-gray-600 transition-all border border-transparent hover:border-gray-100"
+                        onClick={handleClose}
+                        className="p-2 hover:bg-white hover:shadow-md rounded-xl text-gray-400 hover:text-gray-600 transition-all border border-transparent hover:border-gray-100 cursor-pointer"
+                        title="Cerrar ventana"
                     >
                         <X className="h-5 w-5" />
                     </button>

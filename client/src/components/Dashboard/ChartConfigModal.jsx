@@ -17,6 +17,28 @@ const ALL_LINE_IDS = ['2878750303', '9716884348', '9717120739', 'CUAD'];
 
 const ChartConfigModal = ({ isOpen, onClose }) => {
     const { data, stats, chartsData, filters, extensionsMap } = useDashboard();
+    const [isClosing, setIsClosing] = useState(false);
+
+    const handleClose = () => {
+        if (isClosing) return;
+        setIsClosing(true);
+        setTimeout(() => {
+            setIsClosing(false);
+            onClose();
+        }, 270);
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                handleClose();
+            }
+        };
+        if (isOpen) {
+            window.addEventListener('keydown', handleKeyDown);
+        }
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, isClosing]);
 
     // Estado de la Lista de Destinatarios
     const [recipientsList, setRecipientsList] = useState([]);
@@ -370,8 +392,14 @@ const ChartConfigModal = ({ isOpen, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-backdrop">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[680px] max-h-[90vh] min-h-[550px] overflow-hidden border border-slate-200 flex flex-col animate-expand-from-button">
+        <div
+            className={`fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 ${isClosing ? 'animate-backdrop-out' : 'animate-backdrop'}`}
+            onClick={handleClose}
+        >
+            <div
+                className={`bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[680px] max-h-[90vh] min-h-[550px] overflow-hidden border border-slate-200 flex flex-col ${isClosing ? 'animate-shrink-to-button' : 'animate-expand-from-button'}`}
+                onClick={e => e.stopPropagation()}
+            >
                 
                 {/* Header corporativo GASME */}
                 <div className="bg-gradient-to-r from-red-700 via-red-600 to-rose-700 text-white px-6 py-4 flex justify-between items-center shadow-md">
@@ -385,8 +413,8 @@ const ChartConfigModal = ({ isOpen, onClose }) => {
                         </div>
                     </div>
                     <button 
-                        onClick={onClose} 
-                        className="hover:bg-white/20 text-white rounded-full p-1.5 transition-colors"
+                        onClick={handleClose} 
+                        className="hover:bg-white/20 text-white rounded-full p-1.5 transition-colors cursor-pointer"
                         title="Cerrar ventana"
                     >
                         <X className="h-5 w-5" />

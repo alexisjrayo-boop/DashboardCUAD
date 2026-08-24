@@ -448,7 +448,30 @@ body {
 
 .animate-expand-from-button {
   transform-origin: 90% 10%;
-  animation: expandFromButton 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: expandFromButton 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Shrink to Button (Inverse animation on close) */
+@keyframes shrinkToButton {
+  0% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+    filter: blur(0px);
+  }
+  50% {
+    opacity: 0.8;
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.18) translate(100px, -60px);
+    filter: blur(6px);
+  }
+}
+
+.animate-shrink-to-button {
+  transform-origin: 90% 10%;
+  animation: shrinkToButton 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes modalZoomOutIn {
@@ -479,5 +502,18 @@ body {
 
 .animate-backdrop {
   animation: backdropFade 0.25s ease-out forwards;
+}
+
+@keyframes backdropFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-backdrop-out {
+  animation: backdropFadeOut 0.28s ease-in forwards;
 }
 

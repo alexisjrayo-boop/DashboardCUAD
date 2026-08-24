@@ -30,14 +30,19 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    const login = async (username, password) => {
+    // Iniciar sesión por Correo Electrónico (o username)
+    const login = async (emailOrUsername, password) => {
         try {
-            const response = await api.post('/auth/login', { username, password });
-            const { token, user } = response.data;
+            const response = await api.post('/auth/login', { 
+                email: emailOrUsername,
+                username: emailOrUsername,
+                password 
+            });
+            const { token, user: userData } = response.data;
 
             localStorage.setItem('token', token);
-            setUser(user); // O decodificar el token si user no viene completo
-            return { success: true };
+            setUser(userData);
+            return { success: true, user: userData };
         } catch (error) {
             return {
                 success: false,
@@ -51,15 +56,65 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
-    const register = async (username, password, name, profile_picture, email) => {
+    // Dar de alta / Invitar usuario (solo requiere nombre, email, rol, recibir reportes)
+    const inviteUser = async ({ name, email, role = 'user', receive_reports = false }) => {
         try {
-            await api.post('/auth/register', { username, password, name, profile_picture, email });
-            // Opcional: Auto login después del registro
-            return { success: true };
+            const response = await api.post('/auth/register', { 
+                name, 
+                email, 
+                role, 
+                receive_reports 
+            });
+            return { success: true, message: response.data?.message };
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.error || 'Error al registrarse'
+                error: error.response?.data?.error || 'Error al invitar al usuario'
+            };
+        }
+    };
+
+    // Solicitar restablecimiento de contraseña
+    const forgotPassword = async (email) => {
+        try {
+            const response = await api.post('/auth/forgot-password', { email });
+            return { success: true, message: response.data?.message };
+        } catch (error) {
+            return {
+                success: false,
+                error: error.response?.data?.error || 'Error al solicitar el restablecimiento'
+            };
+        }
+    };
+
+    // Crear / Guardar nueva contraseña con Token y auto-login
+    const setPassword = async (token, password) => {
+        try {
+            const response = await api.post('/auth/set-password', { token, password });
+            const { token: sessionToken, user: userData, message } = response.data;
+
+            if (sessionToken) {
+                localStorage.setItem('token', sessionToken);
+                setUser(userData);
+            }
+            return { success: true, message, user: userData };
+        } catch (error) {
+            return {
+                success: false,
+                error: error.response?.data?.error || 'Error al establecer la contraseña'
+            };
+        }
+    };
+
+    // Reenviar enlace de activación o restablecimiento (Admin)
+    const resendResetLink = async (userId) => {
+        try {
+            const response = await api.post(`/auth/resend-reset/${userId}`);
+            return { success: true, message: response.data?.message };
+        } catch (error) {
+            return {
+                success: false,
+                error: error.response?.data?.error || 'Error al reenviar el enlace'
             };
         }
     };
@@ -77,9 +132,7 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await api.put(`/auth/users/${id}`, userData);
 
-            // Si el usuario actualizado es el usuario logueado, actualizar el estado local
             if (response.data.success && user && id === user.id) {
-                // Obtenemos los datos actualizados del body para el estado local
                 setUser(prev => ({
                     ...prev,
                     ...userData
@@ -106,7 +159,11 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         logout,
-        register,
+        register: inviteUser,
+        inviteUser,
+        forgotPassword,
+        setPassword,
+        resendResetLink,
         getUsers,
         updateUser,
         deleteUser,

@@ -5,7 +5,9 @@ services:
     image: mysql:8.0
     container_name: gasme-db-prod
     restart: unless-stopped
+    command: --default-time-zone='-06:00'
     environment:
+      TZ: America/Mexico_City
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-G4sm32015}
       MYSQL_DATABASE: ${DB_NAME:-telmex_cdr}
       MYSQL_USER: ${DB_USER:-admin}
@@ -14,6 +16,8 @@ services:
       - "3308:3307"
     volumes:
       - db_data:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     networks:
       - app-network
 
@@ -26,6 +30,7 @@ services:
     ports:
       - "3001:3000"
     environment:
+      - TZ=America/Mexico_City
       - PORT=${PORT:-3000}
       - DB_HOST=${DB_HOST:-db}
       - DB_USER=${DB_USER:-admin}
@@ -41,6 +46,9 @@ services:
       - SMTP_FROM=${SMTP_FROM}
       - FRONTEND_URL=${FRONTEND_URL:-http://192.168.2.243:8080}
       - APP_URL=${APP_URL:-http://192.168.2.243:8080}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     depends_on:
       - db
     networks:
@@ -55,6 +63,11 @@ services:
     ports:
       - "8080:80"
       - "8443:443"
+    environment:
+      - TZ=America/Mexico_City
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     depends_on:
       - backend
     networks:

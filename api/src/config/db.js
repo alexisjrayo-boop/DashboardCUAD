@@ -3,7 +3,6 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
-// Configuración de la conexión
 const pool = mysql.createPool({
     host: process.env.DB_HOST || '127.0.0.1',
     user: process.env.DB_USER || 'root',
@@ -11,7 +10,8 @@ const pool = mysql.createPool({
     database: process.env.DB_NAME || 'telmex_cdr',
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    timezone: '-06:00'
 });
 
 // Inicializar base de datos

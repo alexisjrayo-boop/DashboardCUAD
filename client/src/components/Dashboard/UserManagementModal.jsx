@@ -211,9 +211,11 @@ const UserManagementModal = ({ isOpen, onClose }) => {
                                 <h2 className="text-base font-black text-gray-900 uppercase tracking-tight">
                                     {view === 'list' ? 'Gestión de Usuarios' : (editMode ? 'Editar Usuario' : 'Nuevo Usuario')}
                                 </h2>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                    {view === 'list' ? 'Analistas y administradores con acceso' : 'Alta por invitación de correo'}
-                                </p>
+                                {view !== 'list' && (
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                        {editMode ? 'Modificar datos de usuario' : 'Alta por invitación de correo'}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>

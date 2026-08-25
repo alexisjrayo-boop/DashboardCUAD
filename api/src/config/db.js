@@ -97,12 +97,30 @@ async function initDB() {
 
         // Asegurar que las columnas name, profile_picture y email existen (para migraciones)
         try {
+            await connection.query(`ALTER TABLE users MODIFY COLUMN password VARCHAR(255) NULL`);
+        } catch {}
+        try {
             await connection.query(`ALTER TABLE users ADD COLUMN email VARCHAR(255) AFTER username`);
         } catch (e) {
             if (e.code !== 'ER_DUP_FIELDNAME') console.warn('  Nota: ' + e.message);
         }
         try {
             await connection.query(`ALTER TABLE users ADD COLUMN name VARCHAR(100) AFTER password`);
+        } catch (e) {
+            if (e.code !== 'ER_DUP_FIELDNAME') console.warn('  Nota: ' + e.message);
+        }
+        try {
+            await connection.query(`ALTER TABLE users ADD COLUMN receive_reports TINYINT(1) DEFAULT 0`);
+        } catch (e) {
+            if (e.code !== 'ER_DUP_FIELDNAME') console.warn('  Nota: ' + e.message);
+        }
+        try {
+            await connection.query(`ALTER TABLE users ADD COLUMN reset_token VARCHAR(255) NULL`);
+        } catch (e) {
+            if (e.code !== 'ER_DUP_FIELDNAME') console.warn('  Nota: ' + e.message);
+        }
+        try {
+            await connection.query(`ALTER TABLE users ADD COLUMN reset_token_expires DATETIME NULL`);
         } catch (e) {
             if (e.code !== 'ER_DUP_FIELDNAME') console.warn('  Nota: ' + e.message);
         }
@@ -122,6 +140,12 @@ async function initDB() {
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 recipient_email VARCHAR(255) NOT NULL,
                 name VARCHAR(100) NULL,
+                recipient_name VARCHAR(100) NULL,
+                active TINYINT(1) DEFAULT 1,
+                frequency VARCHAR(50) DEFAULT 'semanal',
+                phone_lines VARCHAR(100) DEFAULT 'all',
+                call_type VARCHAR(50) DEFAULT '2',
+                format VARCHAR(50) DEFAULT 'pdf',
                 periodicity VARCHAR(20) DEFAULT 'weekly',
                 line VARCHAR(50) DEFAULT 'all',
                 last_sent TIMESTAMP NULL,
@@ -134,6 +158,24 @@ async function initDB() {
         console.log('✓ Tabla email_report_configs verificada/creada');
 
         // Asegurar columnas para migraciones
+        try {
+            await connection.query(`ALTER TABLE email_report_configs ADD COLUMN recipient_name VARCHAR(100) NULL`);
+        } catch {}
+        try {
+            await connection.query(`ALTER TABLE email_report_configs ADD COLUMN active TINYINT(1) DEFAULT 1`);
+        } catch {}
+        try {
+            await connection.query(`ALTER TABLE email_report_configs ADD COLUMN frequency VARCHAR(50) DEFAULT 'semanal'`);
+        } catch {}
+        try {
+            await connection.query(`ALTER TABLE email_report_configs ADD COLUMN phone_lines VARCHAR(100) DEFAULT 'all'`);
+        } catch {}
+        try {
+            await connection.query(`ALTER TABLE email_report_configs ADD COLUMN call_type VARCHAR(50) DEFAULT '2'`);
+        } catch {}
+        try {
+            await connection.query(`ALTER TABLE email_report_configs ADD COLUMN format VARCHAR(50) DEFAULT 'pdf'`);
+        } catch {}
         try {
             await connection.query(`ALTER TABLE email_report_configs ADD COLUMN name VARCHAR(100) NULL AFTER recipient_email`);
         } catch (e) {

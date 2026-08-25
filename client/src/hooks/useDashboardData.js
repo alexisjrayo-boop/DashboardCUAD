@@ -56,12 +56,23 @@ export const useDashboardData = (filters) => {
         setLoading(false);
     }, [filters]);
 
-    // Auto-fetch ONLY when tab (calltype) changes. 
-    // Other filter changes require manual trigger (Search button).
+    // Auto-fetch immediately whenever ANY filter changes
     useEffect(() => {
-        fetchData();
+        const timer = setTimeout(() => {
+            fetchData();
+        }, 100);
+        return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filters.calltype]);
+    }, [
+        filters.calltype,
+        filters.startDate,
+        filters.endDate,
+        filters.line,
+        filters.locationDestination,
+        filters.disposition,
+        filters.source,
+        Array.isArray(filters.destination) ? filters.destination.join(',') : filters.destination
+    ]);
 
     return { loading, data, fetchData, hasLoadedOnce };
 };

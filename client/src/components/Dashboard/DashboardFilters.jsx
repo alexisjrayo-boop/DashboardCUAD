@@ -1,8 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { RefreshCw, Filter, Calendar, MapPin, Phone, X, LayoutGrid, ChevronDown, ArrowDownLeft, ArrowUpRight, ArrowRightLeft, Users } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, ArrowRightLeft } from 'lucide-react';
 import MultiSelect from '../Common/MultiSelect';
 import CustomSelect from '../Common/CustomSelect';
-import FilterPill from '../Common/FilterPill';
 import Tooltip from '../Common/Tooltip';
 import DateRangePicker from '../Common/DateRangePicker';
 import api from '../../services/api';
@@ -207,70 +206,6 @@ const DashboardFilters = ({
             handleTabChange(tabId);
         }
     };
-
-    // Format date range for display
-    const formatDateRange = () => {
-        if (!filters.startDate && !filters.endDate) return 'Sin fecha especificada';
-        const start = filters.startDate ? new Date(filters.startDate).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '';
-        const end = filters.endDate ? new Date(filters.endDate).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' }) : '';
-        if (start && end) return `${start} - ${end}`;
-        return start || end;
-    };
-
-    // Get active filters for display
-    const getActiveFilters = () => {
-        const active = [];
-        // Date
-        if (filters.startDate || filters.endDate) {
-            active.push({
-                id: 'dateRange', icon: Calendar, label: 'Fecha', value: formatDateRange(),
-                onRemove: () => { if (!loading) { onRemoveFilter('startDate'); onRemoveFilter('endDate'); } }
-            });
-        }
-        // Line
-        if (filters.line) {
-            const lineNames = { '2878750303': 'Tuxtepec', '9717120739': 'Juchitán', '9716884348': 'Salina Cruz', 'CUAD': 'No Registrada' };
-            active.push({
-                id: 'line', icon: Phone, label: 'Línea', value: lineNames[filters.line] || filters.line,
-                onRemove: () => !loading && onRemoveFilter('line')
-            });
-        }
-        // Location
-        if (filters.locationDestination) {
-            const locationNames = { 'TX': 'Tuxtepec', 'SC': 'Salina Cruz', 'JT': 'Juchitán', 'CB': 'CUAD' };
-            active.push({
-                id: 'locationDestination', icon: MapPin, label: 'Ubicación', value: locationNames[filters.locationDestination] || filters.locationDestination,
-                onRemove: () => !loading && onRemoveFilter('locationDestination')
-            });
-        }
-        // Extensions
-        if (filters.destination && filters.destination.length > 0) {
-            const count = filters.destination.length;
-            active.push({
-                id: 'destination', icon: Users, label: 'Extensiones', value: count === 1 ? filters.destination[0] : `${count} seleccionadas`,
-                onRemove: () => !loading && onRemoveFilter('destination')
-            });
-        }
-        // Disposition
-        if (filters.disposition) {
-            const dispNames = { 'ANSWERED': 'Contestadas', 'NO ANSWER': 'No Contestadas', 'BUSY': 'Ocupado', 'FAILED': 'Fallido' };
-            active.push({
-                id: 'disposition', icon: Filter, label: 'Estado', value: dispNames[filters.disposition] || filters.disposition,
-                onRemove: () => !loading && onRemoveFilter('disposition')
-            });
-        }
-        // Source (Caller Number)
-        if (filters.source) {
-            active.push({
-                id: 'source', icon: Phone, label: 'Fuente', value: filters.source,
-                onRemove: () => !loading && onRemoveFilter('source')
-            });
-        }
-        return active;
-    };
-
-    const activeFilters = getActiveFilters();
-    const hasActiveFilters = activeFilters.length > 0;
 
     // Tabs Configuration
     const tabs = [
@@ -495,65 +430,6 @@ const DashboardFilters = ({
                         </div>
                     </div>
 
-                </div>
-            </div>
-
-            {/* 3. Footer / Active Filters / Actions */}
-            <div className="bg-white px-6 py-3 border-t border-gray-50 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.02)] relative z-10">
-                <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
-
-                    {/* Active Filters List */}
-                    <div className="flex-1 w-full">
-                        {hasActiveFilters ? (
-                            <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-2">Filtros:</span>
-                                {activeFilters.map((filter) => (
-                                    <FilterPill
-                                        key={filter.id}
-                                        icon={filter.icon}
-                                        label={filter.label}
-                                        value={filter.value}
-                                        onRemove={filter.onRemove}
-                                    />
-                                ))}
-                                <button
-                                    onClick={() => {
-                                        setActivePreset('month');
-                                        if (onClearFilters) onClearFilters();
-                                    }}
-                                    disabled={loading}
-                                    className="text-[10px] text-[#C3002F] hover:underline font-bold uppercase tracking-wider ml-3 disabled:text-gray-300 transition-colors cursor-pointer"
-                                >
-                                    Limpiar
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="text-xs text-gray-600 font-semibold italic">
-                                No se han aplicado filtros adicionales.
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-4 w-full lg:w-auto">
-                        {resultsCount > 0 && (
-                            <div className="text-right hidden xl:block min-w-max">
-                                <p className="text-[9px] font-bold text-gray-600 uppercase tracking-wider leading-none mb-1">Resultados</p>
-                                <p className="text-base font-bold text-gray-900 leading-none tracking-tight">{resultsCount.toLocaleString()}</p>
-                            </div>
-                        )}
-                        <button
-                            onClick={onSearch}
-                            disabled={loading}
-                            aria-busy={loading}
-                            aria-label={loading ? 'Actualizando datos...' : 'Actualizar reporte'}
-                            className="group relative overflow-hidden bg-[#C3002F] text-white px-8 py-2.5 rounded-lg shadow shadow-red-100 hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 w-full lg:w-48 font-bold tracking-wider uppercase text-xs disabled:opacity-50 disabled:translate-y-0"
-                        >
-                            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} aria-hidden="true" />
-                            {loading ? 'Procesando...' : 'Actualizar'}
-                            <div className="absolute inset-x-0 bottom-0 h-0.5 bg-black/10 transition-all duration-300 group-hover:h-1 opacity-0 group-hover:opacity-100"></div>
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

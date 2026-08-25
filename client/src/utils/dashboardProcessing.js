@@ -156,11 +156,11 @@ export const processChartData = (rows, extensionsMap) => {
             dailyBranchCounts[branch][dayStr] = (dailyBranchCounts[branch][dayStr] || 0) + 1;
         }
 
-        // 3. Concurrency Intervals
-        const durationSec = parseInt(r.duration || 0, 10);
+        // 3. Concurrency Intervals (desde que sonó hasta que se colgó)
+        const durationSec = Math.max(parseInt(r.duration || 0, 10), 1);
         const startTime = dateObj.getTime();
         const endTime = startTime + (durationSec * 1000);
-        callIntervals.push({ start: startTime, end: endTime });
+        callIntervals.push({ start: startTime, end: endTime, row: r });
 
         // 4. Area Code (Lada)
         const src = r.src || '';
@@ -452,67 +452,139 @@ export const processChartData = (rows, extensionsMap) => {
 };
 
 /**
- * Calculates max concurrent calls per hour.
- * @param {Array} callIntervals - Array of {start, end} timestamps
+ * Calcula los picos reales de llamadas simultáneas (>= 2 llamadas coincidiendo al mismo tiempo).
+ * Evalúa los intervalos exactos desde que sonó hasta que se colgó la llamada.
+ * @param {Array} callIntervals - Array de {start, end, row}
  */
 const calculateConcurrency = (callIntervals) => {
-    if (callIntervals.length === 0) return { labels: [], datasets: [] };
+    if (!callIntervals || callIntervals.length === 0) {
+        return {
+            labels: [],
+            datasets: [{
+                label: 'Llamadas Simultáneas',
+                data: [],
+                borderColor: '#EC4899',
+                backgroundColor: 'rgba(236, 72, 153, 0.15)',
+                fill: true,
+                tension: 0.3
+            }],
+            episodes: []
+        };
+    }
 
-    // Events approach: +1 at start, -1 at end
+    // 1. Generar eventos de inicio (+1) y fin (-1)
     const events = [];
-    callIntervals.forEach(i => {
-        events.push({ time: i.start, type: 1 });
-        events.push({ time: i.end, type: -1 });
+    for (let idx = 0; idx < callIntervals.length; idx++) {
+        const item = callIntervals[idx];
+        if (item.start && item.end && item.end >= item.start) {
+            events.push({ time: item.start, type: 1, row: item.row, id: idx });
+            events.push({ time: item.end, type: -1, row: item.row, id: idx });
+        }
+    }
+
+    // 2. Ordenar cronológicamente. Si empatan en tiempo, procesar fines (-1) antes que inicios (+1)
+    events.sort((a, b) => {
+        if (a.time !== b.time) return a.time - b.time;
+        return a.type - b.type;
     });
-    // Sort events by time
-    events.sort((a, b) => a.time - b.time);
 
-    let currentConcurrent = 0;
-    const hourMaxMap = new Map();
+    const activeCallsMap = new Map();
+    const episodes = [];
+    let currentEpisode = null;
 
-    events.forEach(e => {
-        currentConcurrent += e.type;
-        // Optimization: Date creation can be slow. 
-        // But for hour buckets we need it. 
-        const d = new Date(e.time);
-        // Creating Key: "16 Dec, 10:00"
-        d.setMinutes(0, 0, 0);
-        // Using toLocaleString is a bit slow inside a loop of potentially 300k events.
-        // Faster key: YYYY-MM-DD-HH
-        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}-${d.getHours()}`;
+    // 3. Barrido temporal para capturar episodios donde coinciden >= 2 llamadas
+    for (let i = 0; i < events.length; i++) {
+        const e = events[i];
+        if (e.type === 1) {
+            activeCallsMap.set(e.id, e.row);
+        } else {
+            activeCallsMap.delete(e.id);
+        }
 
-        // We only really care about updating the max for this hour
-        const currentMax = hourMaxMap.get(key) || { max: 0, label: d.toLocaleString('es-MX', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) };
+        const count = activeCallsMap.size;
 
-        if (currentConcurrent > currentMax.max) {
-            currentMax.max = currentConcurrent;
-            hourMaxMap.set(key, currentMax);
-        } else if (!hourMaxMap.has(key)) {
-            hourMaxMap.set(key, currentMax);
+        if (count >= 2) {
+            if (!currentEpisode) {
+                // Inicia un nuevo período de simultaneidad
+                currentEpisode = {
+                    startTime: e.time,
+                    peakTime: e.time,
+                    maxConcurrent: count,
+                    callsMap: new Map(activeCallsMap)
+                };
+            } else {
+                // Actualizar el pico más alto registrado en esta coincidencia
+                if (count > currentEpisode.maxConcurrent) {
+                    currentEpisode.maxConcurrent = count;
+                    currentEpisode.peakTime = e.time;
+                }
+                // Acumular todas las llamadas que formaron parte del solapamiento
+                activeCallsMap.forEach((call, id) => {
+                    currentEpisode.callsMap.set(id, call);
+                });
+            }
+        } else {
+            // Concurrencia bajó a menos de 2: cerrar el episodio de pico
+            if (currentEpisode) {
+                currentEpisode.endTime = e.time;
+                currentEpisode.durationSec = Math.max(Math.round((currentEpisode.endTime - currentEpisode.startTime) / 1000), 1);
+                currentEpisode.calls = Array.from(currentEpisode.callsMap.values());
+                episodes.push(currentEpisode);
+                currentEpisode = null;
+            }
+        }
+    }
+
+    if (currentEpisode) {
+        currentEpisode.endTime = events[events.length - 1]?.time || currentEpisode.startTime;
+        currentEpisode.durationSec = Math.max(Math.round((currentEpisode.endTime - currentEpisode.startTime) / 1000), 1);
+        currentEpisode.calls = Array.from(currentEpisode.callsMap.values());
+        episodes.push(currentEpisode);
+    }
+
+    if (episodes.length === 0) {
+        return {
+            labels: [],
+            datasets: [{
+                label: 'Llamadas Simultáneas',
+                data: [],
+                borderColor: '#EC4899',
+                backgroundColor: 'rgba(236, 72, 153, 0.15)',
+                fill: true,
+                tension: 0.3
+            }],
+            episodes: []
+        };
+    }
+
+    // 4. Formatear etiquetas de fecha y hora
+    const firstDate = new Date(episodes[0].peakTime);
+    const lastDate = new Date(episodes[episodes.length - 1].peakTime);
+    const isSameDay = firstDate.toDateString() === lastDate.toDateString();
+
+    const labels = episodes.map(ep => {
+        const d = new Date(ep.peakTime);
+        if (isSameDay) {
+            return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        } else {
+            const dayMonth = d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+            const time = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            return `${dayMonth} ${time}`;
         }
     });
 
-    // Convert map to chart arrays
-    // Sort keys based on time? 
-    // keys are "YYYY-MM-DD-HH", checking string order might work if we pad.
-    // Let's just trust the insertion order (mostly chronological due to event sort)
-    // or sort the Map entries.
-    const sortedEntries = Array.from(hourMaxMap.entries()).sort((a, b) => {
-        // Recover time from key or just rely on events order?
-        // Events are sorted, so map insertion *should* be chronological for the FIRST time we see an hour.
-        // But we might revisit an hour? No, time moves forward.
-        return 0; // Assume sorted
-    });
+    const data = episodes.map(ep => ep.maxConcurrent);
 
     return {
-        labels: sortedEntries.map(e => e[1].label),
+        labels,
         datasets: [{
-            label: 'Llamadas Simultáneas Máximas',
-            data: sortedEntries.map(e => e[1].max),
-            borderColor: 'rgb(255, 99, 132)',
-            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            label: 'Llamadas Simultáneas',
+            data,
+            borderColor: '#EC4899',
+            backgroundColor: 'rgba(236, 72, 153, 0.15)',
             fill: true,
-            tension: 0.4
-        }]
+            tension: 0.3
+        }],
+        episodes
     };
 };

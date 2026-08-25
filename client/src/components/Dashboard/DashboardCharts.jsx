@@ -12,6 +12,7 @@ import HeatmapMatrix from '../Common/HeatmapMatrix';
 import ExtensionStatsTable from './ExtensionStatsTable';
 import MonoDonutChart from '../MonoCharts/MonoDonutChart';
 import MonoSplineChart from '../MonoCharts/MonoSplineChart';
+import { PhoneCall, Activity } from 'lucide-react';
 import MonoBarChart from '../MonoCharts/MonoBarChart';
 import MonoTreemap from '../MonoCharts/MonoTreemap';
 import MonoRankList from '../MonoCharts/MonoRankList';
@@ -175,25 +176,20 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
     }, [data, weeklyCallsData, navigate]);
 
     const handleConcurrencyClick = useCallback((event, elements) => {
-        if (!elements || elements.length === 0) return;
+        if (!elements || elements.length === 0 || !concurrencyChartData) return;
         const index = elements[0].index;
-        const label = concurrencyChartData.labels[index];
-        if (label) {
-            const parts = label.split(',');
-            if (parts.length === 2) {
-                const timePart = parts[1].trim();
-                const filtered = data.filter(r => {
-                    const d = new Date(r.calldate);
-                    const dLabel = d.getDate();
-                    const dHour = d.getHours();
-                    const labelDay = parseInt(label.split(' ')[0], 10);
-                    const labelHour = parseInt(timePart.split(':')[0], 10);
-                    return dLabel === labelDay && dHour === labelHour;
-                });
-                navigate('/details', { state: { title: `Pico de Llamadas - ${label}`, data: filtered } });
-            }
+        const ep = concurrencyChartData.episodes?.[index];
+        const label = concurrencyChartData.labels?.[index];
+        
+        if (ep && ep.calls && ep.calls.length > 0) {
+            navigate('/details', {
+                state: {
+                    title: `Pico de Simultaneidad: ${ep.maxConcurrent} llamadas simultáneas (${label})`,
+                    data: ep.calls
+                }
+            });
         }
-    }, [data, concurrencyChartData, navigate]);
+    }, [concurrencyChartData, navigate]);
 
     const handleDailyLineClick = useCallback((event, elements) => {
         if (!elements || elements.length === 0 || !dailyLineData) return;
@@ -506,17 +502,29 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                     <h3 className="text-xs font-bold mb-4 uppercase tracking-wider text-gray-700 border-b border-gray-100 pb-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
-                            <span>Picos de Simultaneidad</span>
+                            <span>Picos de Simultaneidad (≥ 2 llamadas concurrentes)</span>
                         </div>
-                        <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Capacidad Máxima</span>
+                        <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">
+                            {concurrencyChartData.labels.length > 0 ? `${concurrencyChartData.labels.length} momentos de coincidencia` : 'Sin saturación'}
+                        </span>
                     </h3>
                     <div className="h-80 min-h-[300px]">
-                        <MonoSplineChart
-                            data={concurrencyChartData}
-                            onClick={handleConcurrencyClick}
-                            strokeColor="#EC4899"
-                            fillArea={true}
-                        />
+                        {concurrencyChartData.labels.length > 0 ? (
+                            <MonoSplineChart
+                                data={concurrencyChartData}
+                                onClick={handleConcurrencyClick}
+                                strokeColor="#EC4899"
+                                fillArea={true}
+                            />
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                                <div className="w-10 h-10 rounded-full bg-pink-50 flex items-center justify-center mb-2">
+                                    <PhoneCall className="h-5 w-5 text-pink-500" />
+                                </div>
+                                <p className="text-xs font-bold text-slate-700">Sin Picos de Simultaneidad</p>
+                                <p className="text-[11px] text-slate-400 max-w-sm mt-0.5">Todas las llamadas en este período ocurrieron de forma individual sin coincidir 2 o más al mismo tiempo.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

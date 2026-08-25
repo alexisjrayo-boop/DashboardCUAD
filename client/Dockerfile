@@ -8,13 +8,11 @@ RUN npm run build
 
 # Stage 2: Serve con SSL/HTTPS
 FROM nginx:alpine
-RUN apk add --no-cache openssl && \
-    mkdir -p /etc/nginx/ssl && \
-    openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
-    -keyout /etc/nginx/ssl/server.key \
-    -out /etc/nginx/ssl/server.crt \
-    -subj "/C=MX/ST=Oaxaca/L=Tuxtepec/O=GASME/OU=TI/CN=192.168.2.243" \
-    -addext "subjectAltName=IP:192.168.2.243,IP:127.0.0.1,DNS:localhost,DNS:gasme.local"
+RUN mkdir -p /etc/nginx/ssl
+
+# Copiar certificados SSL firmados
+COPY ssl/server.crt /etc/nginx/ssl/server.crt
+COPY ssl/server.key /etc/nginx/ssl/server.key
 
 # Copy built assets
 COPY --from=build /app/dist /usr/share/nginx/html

@@ -77,16 +77,11 @@ async function sendAuthEmail(user, token, req, type = 'invite') {
                     
                     <!-- Encabezado Rojo GASME -->
                     <tr>
-                        <td align="center" valign="middle" bgcolor="#C3002F" style="background-color: #C3002F; padding: 30px 20px;">
+                        <td align="center" valign="middle" bgcolor="#C3002F" style="background-color: #C3002F; padding: 26px 20px;">
                             <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
-                                    <td align="center" style="color: #ffffff; font-family: Arial, Helvetica, sans-serif; font-size: 26px; font-weight: bold; letter-spacing: 1px; line-height: 30px; text-transform: uppercase;">
+                                    <td align="center" style="color: #ffffff; font-family: Arial, Helvetica, sans-serif; font-size: 24px; font-weight: bold; letter-spacing: 1px; line-height: 28px; text-transform: uppercase;">
                                         GASME CUAD
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="color: #ffd6dc; font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: bold; letter-spacing: 2px; line-height: 16px; padding-top: 6px; text-transform: uppercase;">
-                                        Inteligencia Operativa y Control
                                     </td>
                                 </tr>
                             </table>
@@ -109,7 +104,7 @@ async function sendAuthEmail(user, token, req, type = 'invite') {
                                 <tr>
                                     <td style="color: #334155; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 22px; padding-bottom: 24px;">
                                         ${isInvite 
-                                            ? 'Se ha registrado tu cuenta de acceso a la plataforma <strong>GASME CUAD</strong>. Para comenzar a utilizar el panel analítico de llamadas, por favor crea tu contraseña mediante el siguiente botón:'
+                                            ? 'Se ha registrado tu cuenta de acceso a <strong>GASME CUAD</strong>. Para comenzar a utilizar el sistema, por favor crea tu contraseña mediante el siguiente botón:'
                                             : 'Hemos recibido una solicitud para restablecer tu contraseña de acceso a <strong>GASME CUAD</strong>. Haz clic en el botón a continuación para definir tu nueva contraseña:'
                                         }
                                     </td>
@@ -173,11 +168,11 @@ async function sendAuthEmail(user, token, req, type = 'invite') {
 
                     <!-- Pie de Página -->
                     <tr>
-                        <td align="center" valign="middle" bgcolor="#f8fafc" style="background-color: #f8fafc; padding: 18px 20px; border-top: 1px solid #e2e8f0;">
+                        <td align="center" valign="middle" bgcolor="#f8fafc" style="background-color: #f8fafc; padding: 16px 20px; border-top: 1px solid #e2e8f0;">
                             <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
                                     <td align="center" style="color: #94a3b8; font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 16px;">
-                                        &copy; ${new Date().getFullYear()} Grupo GASME &bull; Plataforma de Inteligencia Operativa CUAD
+                                        &copy; ${new Date().getFullYear()} Grupo GASME &bull; Sistema CUAD
                                     </td>
                                 </tr>
                             </table>

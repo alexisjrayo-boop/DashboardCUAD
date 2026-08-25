@@ -361,8 +361,7 @@ exports.processAndSendScheduledReports = async () => {
                                     <td align="center">
                                         <table width="600" cellpadding="0" cellspacing="0" border="0" style="width: 600px; max-width: 600px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
                                             <tr>
-                                                <td bgcolor="#C3002F" align="center" style="background-color: #C3002F; padding: 28px 20px; text-align: center;">
-                                                    <div style="font-size: 10px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; margin-bottom: 4px; opacity: 0.9;">SISTEMA DE INTELIGENCIA DE TELEFONÍA</div>
+                                                <td bgcolor="#C3002F" align="center" style="background-color: #C3002F; padding: 24px 20px; text-align: center;">
                                                     <h1 style="margin: 0; font-size: 22px; font-weight: bold; color: #ffffff; letter-spacing: -0.5px;">Reporte Semanal GASME CUAD</h1>
                                                 </td>
                                             </tr>
@@ -404,7 +403,7 @@ exports.processAndSendScheduledReports = async () => {
                                             </tr>
                                             <tr>
                                                 <td bgcolor="#f8fafc" align="center" style="background-color: #f8fafc; padding: 16px 20px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b;">
-                                                    <strong>GASME CUAD © ${new Date().getFullYear()}</strong> &nbsp;|&nbsp; Inteligencia & Analítica Operativa de Telefonía
+                                                    <strong>GASME CUAD © ${new Date().getFullYear()}</strong> &nbsp;|&nbsp; Grupo GASME
                                                 </td>
                                             </tr>
                                         </table>
@@ -475,8 +474,7 @@ exports.processAndSendScheduledReports = async () => {
                                     <td align="center">
                                         <table width="600" cellpadding="0" cellspacing="0" border="0" style="width: 600px; max-width: 600px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
                                             <tr>
-                                                <td bgcolor="#C3002F" align="center" style="background-color: #C3002F; padding: 28px 20px; text-align: center;">
-                                                    <div style="font-size: 10px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; margin-bottom: 4px; opacity: 0.9;">SISTEMA DE INTELIGENCIA DE TELEFONÍA</div>
+                                                <td bgcolor="#C3002F" align="center" style="background-color: #C3002F; padding: 24px 20px; text-align: center;">
                                                     <h1 style="margin: 0; font-size: 22px; font-weight: bold; color: #ffffff; letter-spacing: -0.5px;">Reporte Mensual GASME CUAD</h1>
                                                 </td>
                                             </tr>
@@ -518,7 +516,7 @@ exports.processAndSendScheduledReports = async () => {
                                             </tr>
                                             <tr>
                                                 <td bgcolor="#f8fafc" align="center" style="background-color: #f8fafc; padding: 16px 20px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b;">
-                                                    <strong>GASME CUAD © ${new Date().getFullYear()}</strong> &nbsp;|&nbsp; Inteligencia & Analítica Operativa de Telefonía
+                                                    <strong>GASME CUAD © ${new Date().getFullYear()}</strong> &nbsp;|&nbsp; Grupo GASME
                                                 </td>
                                             </tr>
                                         </table>
@@ -635,16 +633,15 @@ exports.sendTestEmailReport = async (req, res) => {
         const mailOptions = {
             from: smtpFrom,
             to: recipient_email,
-            subject: `[PRUEBA DE REPORTE] Analytics GASME CUAD - ${recipient_name || recipient_email}`,
+            subject: `[PRUEBA DE REPORTE] Reporte GASME CUAD - ${recipient_name || recipient_email}`,
             html: `
                 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f1f5f9; padding: 30px 0; font-family: Arial, Helvetica, sans-serif;">
                     <tr>
                         <td align="center">
                             <table width="600" cellpadding="0" cellspacing="0" border="0" style="width: 600px; max-width: 600px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
                                 <tr>
-                                    <td bgcolor="#C3002F" align="center" style="background-color: #C3002F; padding: 28px 20px; text-align: center;">
-                                        <div style="font-size: 10px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; margin-bottom: 4px; opacity: 0.9;">SISTEMA DE INTELIGENCIA DE TELEFONÍA</div>
-                                        <h1 style="margin: 0; font-size: 22px; font-weight: bold; color: #ffffff; letter-spacing: -0.5px;">Analytics GASME CUAD</h1>
+                                    <td bgcolor="#C3002F" align="center" style="background-color: #C3002F; padding: 24px 20px; text-align: center;">
+                                        <h1 style="margin: 0; font-size: 22px; font-weight: bold; color: #ffffff; letter-spacing: -0.5px;">Reporte GASME CUAD</h1>
                                     </td>
                                 </tr>
                                 <tr>
@@ -679,7 +676,7 @@ exports.sendTestEmailReport = async (req, res) => {
                                 </tr>
                                 <tr>
                                     <td bgcolor="#f8fafc" align="center" style="background-color: #f8fafc; padding: 16px 20px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b;">
-                                        <strong>GASME CUAD © ${new Date().getFullYear()}</strong> &nbsp;|&nbsp; Inteligencia & Analítica Operativa de Telefonía
+                                        <strong>GASME CUAD © ${new Date().getFullYear()}</strong> &nbsp;|&nbsp; Grupo GASME
                                     </td>
                                 </tr>
                             </table>

@@ -19,7 +19,7 @@ function getMailTransporter() {
     });
 }
 
-// Plantilla HTML de correo corporativo para Activación / Restablecimiento
+// Plantilla HTML de correo corporativo para Activación / Restablecimiento (100% Compatible con Microsoft Outlook)
 async function sendAuthEmail(user, token, req, type = 'invite') {
     const transporter = getMailTransporter();
     const fromAddress = process.env.SMTP_FROM || `"GASME CUAD Notificaciones" <${process.env.SMTP_USER || 'notificaciones.ti@grupogasme.com'}>`;
@@ -40,60 +40,161 @@ async function sendAuthEmail(user, token, req, type = 'invite') {
         ? 'Bienvenido a GASME CUAD — Activa tu cuenta y crea tu contraseña'
         : 'GASME CUAD — Restablecimiento de contraseña';
 
-    const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <style>
-            body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f6f9; margin: 0; padding: 0; color: #1e293b; }
-            .container { max-width: 600px; margin: 30px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-            .header { background: linear-gradient(135deg, #8E0022 0%, #C3002F 50%, #9C0026 100%); padding: 32px 24px; text-align: center; color: #ffffff; }
-            .header h1 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 1px; }
-            .header p { margin: 6px 0 0; font-size: 11px; font-weight: bold; opacity: 0.85; text-transform: uppercase; letter-spacing: 2px; }
-            .content { padding: 32px 28px; line-height: 1.6; }
-            .greeting { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 12px; }
-            .button-wrapper { text-align: center; margin: 32px 0; }
-            .btn { display: inline-block; background-color: #C3002F; color: #ffffff !important; padding: 14px 32px; border-radius: 12px; font-weight: 800; font-size: 14px; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(195,0,47,0.35); }
-            .footer { background-color: #f8fafc; padding: 20px 24px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0; }
-            .fallback-link { word-break: break-all; color: #C3002F; font-size: 12px; }
-            .warning { background-color: #fff1f2; border: 1px solid #ffe4e6; color: #9f1239; padding: 12px 16px; border-radius: 8px; font-size: 12px; margin-top: 24px; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>GASME CUAD</h1>
-                <p>Inteligencia Operativa y Control</p>
-            </div>
-            <div class="content">
-                <div class="greeting">Hola, ${user.name || 'Usuario'}</div>
-                <p>
-                    ${isInvite 
-                        ? 'Se ha registrado tu cuenta en la plataforma <strong>GASME CUAD</strong>. Para comenzar a utilizar el panel analítico, por favor crea tu contraseña de acceso mediante el siguiente botón:'
-                        : 'Hemos recibido una solicitud para restablecer tu contraseña de acceso a <strong>GASME CUAD</strong>. Haz clic en el botón a continuación para definir una nueva contraseña:'
-                    }
-                </p>
-                <div class="button-wrapper">
-                    <a href="${actionUrl}" target="_blank" class="btn">
-                        ${isInvite ? 'Crear mi Contraseña' : 'Restablecer Contraseña'}
-                    </a>
-                </div>
-                <p style="font-size: 13px; color: #64748b;">
-                    Si el botón no funciona, copia y pega el siguiente enlace en tu navegador web:
-                </p>
-                <p><a href="${actionUrl}" class="fallback-link">${actionUrl}</a></p>
-                <div class="warning">
-                    ⏱️ Este enlace es personal y tiene una validez de <strong>24 horas</strong> por motivos de seguridad. Si no solicitaste este acceso, puedes ignorar este mensaje.
-                </div>
-            </div>
-            <div class="footer">
-                &copy; ${new Date().getFullYear()} Grupo GASME. Todos los derechos reservados.
-            </div>
-        </div>
-    </body>
-    </html>
-    `;
+    const btnText = isInvite ? 'Crear mi Contraseña' : 'Restablecer Contraseña';
+
+    const htmlContent = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${subject}</title>
+    <!--[if gte mso 9]>
+    <xml>
+        <o:OfficeDocumentSettings>
+            <o:AllowPNG/>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+    </xml>
+    <![endif]-->
+    <style type="text/css">
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+        body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #f4f6f9; font-family: Arial, Helvetica, sans-serif; }
+    </style>
+</head>
+<body bgcolor="#f4f6f9" style="margin: 0; padding: 0; background-color: #f4f6f9;">
+    <!-- Contenedor Exterior -->
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="#f4f6f9" style="background-color: #f4f6f9; table-layout: fixed;">
+        <tr>
+            <td align="center" valign="top" style="padding: 25px 15px;">
+                <!--[if (gte mso 9)|(IE)]>
+                <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+                <tr>
+                <td align="center" valign="top" width="600">
+                <![endif]-->
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    
+                    <!-- Encabezado Rojo GASME -->
+                    <tr>
+                        <td align="center" valign="middle" bgcolor="#C3002F" style="background-color: #C3002F; padding: 30px 20px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center" style="color: #ffffff; font-family: Arial, Helvetica, sans-serif; font-size: 26px; font-weight: bold; letter-spacing: 1px; line-height: 30px; text-transform: uppercase;">
+                                        GASME CUAD
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="color: #ffd6dc; font-family: Arial, Helvetica, sans-serif; font-size: 11px; font-weight: bold; letter-spacing: 2px; line-height: 16px; padding-top: 6px; text-transform: uppercase;">
+                                        Inteligencia Operativa y Control
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Cuerpo del Correo -->
+                    <tr>
+                        <td align="left" valign="top" style="padding: 30px 28px; background-color: #ffffff;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                
+                                <!-- Saludo -->
+                                <tr>
+                                    <td style="color: #0f172a; font-family: Arial, Helvetica, sans-serif; font-size: 18px; font-weight: bold; line-height: 24px; padding-bottom: 12px;">
+                                        Hola, ${user.name || 'Usuario'}
+                                    </td>
+                                </tr>
+
+                                <!-- Texto Principal -->
+                                <tr>
+                                    <td style="color: #334155; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 22px; padding-bottom: 24px;">
+                                        ${isInvite 
+                                            ? 'Se ha registrado tu cuenta de acceso a la plataforma <strong>GASME CUAD</strong>. Para comenzar a utilizar el panel analítico de llamadas, por favor crea tu contraseña mediante el siguiente botón:'
+                                            : 'Hemos recibido una solicitud para restablecer tu contraseña de acceso a <strong>GASME CUAD</strong>. Haz clic en el botón a continuación para definir tu nueva contraseña:'
+                                        }
+                                    </td>
+                                </tr>
+
+                                <!-- Botón Compatible con Outlook -->
+                                <tr>
+                                    <td align="center" valign="middle" style="padding: 10px 0 26px 0;">
+                                        <table border="0" cellspacing="0" cellpadding="0" align="center">
+                                            <tr>
+                                                <td align="center" bgcolor="#C3002F" style="border-radius: 6px; background-color: #C3002F;">
+                                                    <!--[if mso]>
+                                                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${actionUrl}" style="height:46px;v-text-anchor:middle;width:260px;" arcsize="12%" stroke="f" fillcolor="#C3002F">
+                                                        <w:anchorlock/>
+                                                        <center style="color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">
+                                                            ${btnText}
+                                                        </center>
+                                                    </v:roundrect>
+                                                    <![endif]-->
+                                                    <!--[if !mso]><!-->
+                                                    <a href="${actionUrl}" target="_blank" style="font-size: 14px; font-family: Arial, Helvetica, sans-serif; font-weight: bold; color: #ffffff; text-decoration: none; border-radius: 6px; padding: 14px 28px; display: inline-block; background-color: #C3002F; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #C3002F;">
+                                                        ${btnText}
+                                                    </a>
+                                                    <!--<![endif]-->
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Enlace de Respaldo -->
+                                <tr>
+                                    <td style="color: #64748b; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px; padding-bottom: 6px;">
+                                        Si el botón no abre correctamente, copia y pega este enlace en tu navegador:
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; word-break: break-all;">
+                                        <a href="${actionUrl}" target="_blank" style="color: #C3002F; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 16px; text-decoration: underline; word-break: break-all;">
+                                            ${actionUrl}
+                                        </a>
+                                    </td>
+                                </tr>
+
+                                <!-- Aviso de Seguridad -->
+                                <tr>
+                                    <td style="padding-top: 20px;">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fff1f2; border-left: 4px solid #C3002F; border-radius: 4px;">
+                                            <tr>
+                                                <td style="padding: 12px 14px; color: #9f1239; font-family: Arial, Helvetica, sans-serif; font-size: 12px; line-height: 18px;">
+                                                    <strong>⏱️ Nota de Seguridad:</strong> Este enlace es de uso único y tiene una vigencia de <strong>24 horas</strong>. Si no solicitaste este acceso, puedes ignorar este mensaje.
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Pie de Página -->
+                    <tr>
+                        <td align="center" valign="middle" bgcolor="#f8fafc" style="background-color: #f8fafc; padding: 18px 20px; border-top: 1px solid #e2e8f0;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center" style="color: #94a3b8; font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 16px;">
+                                        &copy; ${new Date().getFullYear()} Grupo GASME &bull; Plataforma de Inteligencia Operativa CUAD
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                </table>
+                <!--[if (gte mso 9)|(IE)]>
+                </td>
+                </tr>
+                </table>
+                <![endif]-->
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`;
 
     return transporter.sendMail({
         from: fromAddress,

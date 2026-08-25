@@ -150,15 +150,24 @@ async function initDB() {
             if (e.code !== 'ER_DUP_FIELDNAME') console.warn('  Nota: ' + e.message);
         }
 
-        // Asegurar que el usuario administrador existe (resetear si es necesario)
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash('admin123', salt);
-        await connection.query(`
-            INSERT INTO users (username, password, role, name) 
-            VALUES ('admin', ?, 'admin', 'Sistemas')
-            ON DUPLICATE KEY UPDATE password = VALUES(password), role = 'admin'
-        `, [hashedPassword]);
-        console.log('✓ Usuario administrador verificado/resetado: admin / admin123');
+        // Asegurar que el usuario administrador existe
+        const [existingAdmin] = await connection.query('SELECT id, password FROM users WHERE username = "admin" OR email = "admin@grupogasme.com"');
+        if (existingAdmin.length === 0) {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash('Gasme2026Master!', salt);
+            await connection.query(`
+                INSERT INTO users (username, email, password, role, name) 
+                VALUES ('admin', 'admin@grupogasme.com', ?, 'admin', 'Administrador Master')
+            `, [hashedPassword]);
+            console.log('✓ Usuario Administrador Master creado');
+        } else {
+            // Asegurar email y rol
+            await connection.query(`
+                UPDATE users SET email = IFNULL(email, 'admin@grupogasme.com'), role = 'admin', name = IFNULL(name, 'Administrador Master')
+                WHERE id = ?
+            `, [existingAdmin[0].id]);
+            console.log('✓ Usuario Administrador Master verificado');
+        }
 
         // Create Indexes for performance (Standard MySQL does not support IF NOT EXISTS for CREATE INDEX)
         console.log('  Verificando índices de rendimiento...');

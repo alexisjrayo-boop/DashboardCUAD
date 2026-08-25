@@ -176,7 +176,11 @@ async function initDB() {
             { name: 'idx_src', sql: `CREATE INDEX idx_src ON cdrs(src)` },
             { name: 'idx_destination', sql: `CREATE INDEX idx_destination ON cdrs(destination)` },
             { name: 'idx_disposition', sql: `CREATE INDEX idx_disposition ON cdrs(disposition)` },
-            { name: 'idx_calltype', sql: `CREATE INDEX idx_calltype ON cdrs(calltype)` }
+            { name: 'idx_calltype', sql: `CREATE INDEX idx_calltype ON cdrs(calltype)` },
+            { name: 'idx_calltype_calldate', sql: `CREATE INDEX idx_calltype_calldate ON cdrs(calltype, calldate)` },
+            { name: 'idx_calldate_calltype', sql: `CREATE INDEX idx_calldate_calltype ON cdrs(calldate, calltype)` },
+            { name: 'idx_calltype_disp_date', sql: `CREATE INDEX idx_calltype_disp_date ON cdrs(calltype, disposition, calldate)` },
+            { name: 'idx_disp_date', sql: `CREATE INDEX idx_disp_date ON cdrs(disposition, calldate)` }
         ];
 
         for (const item of indexQueries) {

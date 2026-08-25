@@ -2,6 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserPlus, Settings, LogOut, ArrowLeft } from 'lucide-react';
 import gasmeLogo from '../../assets/gasme.PNG';
+import { useSocket } from '../../hooks/useSocket';
+import { useDashboard } from '../../context/DashboardContext';
 
 const Navbar = ({
     user,
@@ -11,6 +13,18 @@ const Navbar = ({
     showBackButton = false
 }) => {
     const navigate = useNavigate();
+    const { isConnected } = useSocket();
+    
+    let dashboardCtx = null;
+    try {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        dashboardCtx = useDashboard();
+    } catch {
+        // No en contexto de dashboard (ej. página aislada)
+    }
+
+    const isLiveActive = dashboardCtx?.isLiveActive !== undefined ? dashboardCtx.isLiveActive : true;
+    const toggleLiveSync = dashboardCtx?.toggleLiveSync;
 
     return (
         <header className="sticky top-0 z-50 bg-[#C3002F] text-white shadow-md shadow-black/10 transition-shadow">
@@ -34,10 +48,32 @@ const Navbar = ({
                     </div>
 
                     {/* App Title */}
-                    <div className="flex items-center gap-2 select-none">
+                    <div className="flex items-center gap-2.5 select-none">
                         <span className="text-lg md:text-xl font-bold tracking-tight text-white">
                             GASME CUAD
                         </span>
+                        
+                        {/* Botón interactivo de Sincronización En Vivo / Pausado */}
+                        <button
+                            onClick={() => toggleLiveSync && toggleLiveSync()}
+                            className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border transition-all cursor-pointer select-none ${
+                                isLiveActive
+                                    ? 'bg-black/25 hover:bg-black/35 border-emerald-400/40 text-white/95 shadow-xs'
+                                    : 'bg-black/15 hover:bg-black/25 border-white/20 text-white/60'
+                            }`}
+                            title={isLiveActive ? 'Sincronización en vivo activa (Clic para pausar)' : 'Sincronización pausada (Clic para activar)'}
+                        >
+                            <span className={`w-2 h-2 rounded-full transition-all ${
+                                !isConnected
+                                    ? 'bg-amber-400'
+                                    : isLiveActive
+                                        ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse'
+                                        : 'bg-gray-400 opacity-60'
+                            }`}></span>
+                            <span className="hidden sm:inline text-[11px] font-medium">
+                                {!isConnected ? 'Conectando' : isLiveActive ? 'En vivo' : 'Pausado'}
+                            </span>
+                        </button>
                     </div>
                 </div>
 

@@ -345,11 +345,73 @@ exports.processAndSendScheduledReports = async () => {
 
                 console.log(`  Envío de Reporte Semanal (Entrantes) para: ${recipient.recipient_email}`);
                 try {
+                    const appUrl = process.env.APP_URL || 'http://localhost:5173';
+                    const startParamWeekly = `${startDateWeekly.getFullYear()}-${pad(startDateWeekly.getMonth() + 1)}-${pad(startDateWeekly.getDate())}T00:00`;
+                    const endParamWeekly = `${endDateWeekly.getFullYear()}-${pad(endDateWeekly.getMonth() + 1)}-${pad(endDateWeekly.getDate())}T23:59`;
+                    const webLinkWeekly = `${appUrl}/?startDate=${encodeURIComponent(startParamWeekly)}&endDate=${encodeURIComponent(endParamWeekly)}&calltype=2`;
+
                     const mailOptions = {
                         from: `"GASME CUAD Reports" <${process.env.SMTP_FROM || smtpUser}>`,
                         to: recipient.recipient_email,
-                        subject: `Reporte Semanal de Llamadas Entrantes (${startDateWeekly.toLocaleDateString()} - ${endDateWeekly.toLocaleDateString()})`,
-                        text: `Hola ${recipient.name || ''},\n\nAdjunto encontrarás el reporte semanal consolidado de LLAMADAS ENTRANTES correspondiente al periodo del ${startStrWeekly.split(' ')[0]} al ${endStrWeekly.split(' ')[0]}.\n\nTotal de llamadas entrantes registradas: ${recordsWeekly.length}\n\nEste correo se genera automáticamente. No responder.`,
+                        subject: `📊 Reporte Semanal de Llamadas Entrantes (${startDateWeekly.toLocaleDateString()} - ${endDateWeekly.toLocaleDateString()})`,
+                        text: `Hola ${recipient.name || ''},\n\nAdjunto encontrarás el reporte semanal consolidado de LLAMADAS ENTRANTES correspondiente al periodo del ${startStrWeekly.split(' ')[0]} al ${endStrWeekly.split(' ')[0]}.\n\nTotal de llamadas registradas: ${recordsWeekly.length}\n\nPuedes consultar el reporte interactivo y sus gráficas en vivo en la plataforma aquí:\n${webLinkWeekly}\n\nEste correo se genera automáticamente. No responder.`,
+                        html: `
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f1f5f9; padding: 30px 0; font-family: Arial, Helvetica, sans-serif;">
+                                <tr>
+                                    <td align="center">
+                                        <table width="600" cellpadding="0" cellspacing="0" border="0" style="width: 600px; max-width: 600px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
+                                            <tr>
+                                                <td bgcolor="#C3002F" align="center" style="background-color: #C3002F; padding: 28px 20px; text-align: center;">
+                                                    <div style="font-size: 10px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; margin-bottom: 4px; opacity: 0.9;">SISTEMA DE INTELIGENCIA DE TELEFONÍA</div>
+                                                    <h1 style="margin: 0; font-size: 22px; font-weight: bold; color: #ffffff; letter-spacing: -0.5px;">Reporte Semanal GASME CUAD</h1>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 28px 24px; color: #334155; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;">
+                                                    <p style="margin-top: 0; font-size: 16px; color: #0f172a; margin-bottom: 8px;">Hola, <strong>${recipient.name || 'Destinatario'}</strong></p>
+                                                    <p style="color: #64748b; margin-top: 0; margin-bottom: 22px; font-size: 14px;">Adjunto a este correo encontrarás el archivo Excel consolidado con el reporte semanal de <strong>Llamadas Entrantes</strong>.</p>
+                                                    
+                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 22px;">
+                                                        <tr>
+                                                            <td style="padding: 16px;">
+                                                                <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; margin-bottom: 12px;">RESUMEN DEL PERÍODO</div>
+                                                                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 13px;">
+                                                                    <tr>
+                                                                        <td width="140" style="padding: 8px 0; font-weight: bold; color: #64748b; border-bottom: 1px solid #e2e8f0;">Período:</td>
+                                                                        <td style="padding: 8px 0; color: #0f172a; font-weight: bold; border-bottom: 1px solid #e2e8f0;">${startStrWeekly.split(' ')[0]} al ${endStrWeekly.split(' ')[0]} (Lunes a Domingo)</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td width="140" style="padding: 8px 0; font-weight: bold; color: #64748b; border-bottom: 1px solid #e2e8f0;">Total Llamadas:</td>
+                                                                        <td style="padding: 8px 0; color: #0f172a; font-weight: bold; border-bottom: 1px solid #e2e8f0;">${recordsWeekly.length.toLocaleString()} llamadas</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td width="140" style="padding: 8px 0; font-weight: bold; color: #64748b;">Tipo:</td>
+                                                                        <td style="padding: 8px 0; color: #0f172a;">Llamadas Entrantes</td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+
+                                                    <div style="text-align: center; margin: 25px 0;">
+                                                        <a href="${webLinkWeekly}" target="_blank" style="background-color: #C3002F; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 10px rgba(195,0,47,0.25);">
+                                                            📊 Ver Reporte Interactivo en la Web
+                                                        </a>
+                                                    </div>
+
+                                                    <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 25px; margin-bottom: 0;">Este es un mensaje automático generado por el sistema. Por favor no responda a este correo.</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td bgcolor="#f8fafc" align="center" style="background-color: #f8fafc; padding: 16px 20px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b;">
+                                                    <strong>GASME CUAD © ${new Date().getFullYear()}</strong> &nbsp;|&nbsp; Inteligencia & Analítica Operativa de Telefonía
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        `,
                         attachments: [
                             {
                                 filename: `Reporte_Semanal_Entrantes_${startStrWeekly.split(' ')[0]}.xlsx`,
@@ -397,11 +459,73 @@ exports.processAndSendScheduledReports = async () => {
 
                 console.log(`  Envío de Reporte Mensual (Entrantes) para: ${recipient.recipient_email}`);
                 try {
+                    const appUrl = process.env.APP_URL || 'http://localhost:5173';
+                    const startParamMonthly = `${startDateMonthly.getFullYear()}-${pad(startDateMonthly.getMonth() + 1)}-${pad(startDateMonthly.getDate())}T00:00`;
+                    const endParamMonthly = `${endDateMonthly.getFullYear()}-${pad(endDateMonthly.getMonth() + 1)}-${pad(endDateMonthly.getDate())}T23:59`;
+                    const webLinkMonthly = `${appUrl}/?startDate=${encodeURIComponent(startParamMonthly)}&endDate=${encodeURIComponent(endParamMonthly)}&calltype=2`;
+
                     const mailOptions = {
                         from: `"GASME CUAD Reports" <${process.env.SMTP_FROM || smtpUser}>`,
                         to: recipient.recipient_email,
-                        subject: `Reporte Mensual de Llamadas Entrantes (${startDateMonthly.toLocaleDateString()} - ${endDateMonthly.toLocaleDateString()})`,
-                        text: `Hola ${recipient.name || ''},\n\nAdjunto encontrarás el reporte mensual consolidado de LLAMADAS ENTRANTES correspondiente al periodo del ${startStrMonthly.split(' ')[0]} al ${endStrMonthly.split(' ')[0]}.\n\nTotal de llamadas entrantes registradas: ${recordsMonthly.length}\n\nEste correo se genera automáticamente. No responder.`,
+                        subject: `📊 Reporte Mensual de Llamadas Entrantes (${startDateMonthly.toLocaleDateString()} - ${endDateMonthly.toLocaleDateString()})`,
+                        text: `Hola ${recipient.name || ''},\n\nAdjunto encontrarás el reporte mensual consolidado de LLAMADAS ENTRANTES correspondiente al periodo del ${startStrMonthly.split(' ')[0]} al ${endStrMonthly.split(' ')[0]}.\n\nTotal de llamadas registradas: ${recordsMonthly.length}\n\nPuedes consultar el reporte interactivo y sus gráficas en vivo en la plataforma aquí:\n${webLinkMonthly}\n\nEste correo se genera automáticamente. No responder.`,
+                        html: `
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f1f5f9; padding: 30px 0; font-family: Arial, Helvetica, sans-serif;">
+                                <tr>
+                                    <td align="center">
+                                        <table width="600" cellpadding="0" cellspacing="0" border="0" style="width: 600px; max-width: 600px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
+                                            <tr>
+                                                <td bgcolor="#C3002F" align="center" style="background-color: #C3002F; padding: 28px 20px; text-align: center;">
+                                                    <div style="font-size: 10px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; margin-bottom: 4px; opacity: 0.9;">SISTEMA DE INTELIGENCIA DE TELEFONÍA</div>
+                                                    <h1 style="margin: 0; font-size: 22px; font-weight: bold; color: #ffffff; letter-spacing: -0.5px;">Reporte Mensual GASME CUAD</h1>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 28px 24px; color: #334155; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;">
+                                                    <p style="margin-top: 0; font-size: 16px; color: #0f172a; margin-bottom: 8px;">Hola, <strong>${recipient.name || 'Destinatario'}</strong></p>
+                                                    <p style="color: #64748b; margin-top: 0; margin-bottom: 22px; font-size: 14px;">Adjunto a este correo encontrarás el archivo Excel consolidado con el reporte mensual de <strong>Llamadas Entrantes</strong>.</p>
+                                                    
+                                                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 22px;">
+                                                        <tr>
+                                                            <td style="padding: 16px;">
+                                                                <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; margin-bottom: 12px;">RESUMEN DEL MES CONCLUIDO</div>
+                                                                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 13px;">
+                                                                    <tr>
+                                                                        <td width="140" style="padding: 8px 0; font-weight: bold; color: #64748b; border-bottom: 1px solid #e2e8f0;">Período:</td>
+                                                                        <td style="padding: 8px 0; color: #0f172a; font-weight: bold; border-bottom: 1px solid #e2e8f0;">${startStrMonthly.split(' ')[0]} al ${endStrMonthly.split(' ')[0]} (Mes Completo)</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td width="140" style="padding: 8px 0; font-weight: bold; color: #64748b; border-bottom: 1px solid #e2e8f0;">Total Llamadas:</td>
+                                                                        <td style="padding: 8px 0; color: #0f172a; font-weight: bold; border-bottom: 1px solid #e2e8f0;">${recordsMonthly.length.toLocaleString()} llamadas</td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td width="140" style="padding: 8px 0; font-weight: bold; color: #64748b;">Tipo:</td>
+                                                                        <td style="padding: 8px 0; color: #0f172a;">Llamadas Entrantes</td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+
+                                                    <div style="text-align: center; margin: 25px 0;">
+                                                        <a href="${webLinkMonthly}" target="_blank" style="background-color: #C3002F; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 10px rgba(195,0,47,0.25);">
+                                                            📊 Ver Reporte Interactivo en la Web
+                                                        </a>
+                                                    </div>
+
+                                                    <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 25px; margin-bottom: 0;">Este es un mensaje automático generado por el sistema. Por favor no responda a este correo.</p>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td bgcolor="#f8fafc" align="center" style="background-color: #f8fafc; padding: 16px 20px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b;">
+                                                    <strong>GASME CUAD © ${new Date().getFullYear()}</strong> &nbsp;|&nbsp; Inteligencia & Analítica Operativa de Telefonía
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        `,
                         attachments: [
                             {
                                 filename: `Reporte_Mensual_Entrantes_${startStrMonthly.split(' ')[0]}.xlsx`,

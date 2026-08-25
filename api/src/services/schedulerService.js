@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const { loginAndFetch } = require('./telmexService');
+const { broadcastCdrUpdate } = require('./socketService');
 const { pool } = require('../config/db');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
@@ -234,6 +235,7 @@ async function processAndSaveRows(rows) {
 
         await connection.commit();
         console.log(`  ✓ Guardados ${dataRows.length} registros.`);
+        return dataRows.length;
     } catch (err) {
         await connection.rollback();
         throw err;
@@ -264,6 +266,7 @@ async function fetchAndSaveDailyCDRs(options = {}) {
 
     try {
         let from, to;
+        let totalSaved = 0;
 
         if (options.fromDate) {
             from = options.fromDate;
@@ -308,7 +311,8 @@ async function fetchAndSaveDailyCDRs(options = {}) {
 
                 // 3. Procesar resultados del chunk
                 if (result.data && result.data.rows && result.data.rows.length > 0) {
-                    await processAndSaveRows(result.data.rows);
+                    const saved = await processAndSaveRows(result.data.rows);
+                    if (saved) totalSaved += saved;
                 } else {
                     console.log('     Sin registros en este periodo.');
                 }
@@ -324,6 +328,14 @@ async function fetchAndSaveDailyCDRs(options = {}) {
         }
 
         console.log('✓ Proceso de sincronización finalizado.');
+
+        // Si se guardaron nuevos registros, notificar a los clientes vía WebSockets
+        if (totalSaved > 0) {
+            broadcastCdrUpdate({
+                count: totalSaved,
+                timestamp: new Date().toISOString()
+            });
+        }
 
     } catch (error) {
         console.error('✗ Error general en el proceso de sincronización:', error.message);

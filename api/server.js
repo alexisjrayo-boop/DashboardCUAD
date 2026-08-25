@@ -2,18 +2,28 @@
 // API Backend para Dashboard CDR Telmex (Updated SMTP Config)
 // ============================================
 
+const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const { initDB } = require('./src/config/db');
 const { startScheduler, checkAndRunInitialFetch } = require('./src/services/schedulerService');
+const { initSocket } = require('./src/services/socketService');
 const cdrRoutes = require('./src/routes/cdrRoutes');
 const authRoutes = require('./src/routes/authRoutes');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
+
+// Inicializar WebSocket
+initSocket(server);
+
+// Compresión de respuestas HTTP (gzip)
+app.use(compression());
 
 // Middleware de Seguridad
 app.use(helmet({
@@ -82,9 +92,9 @@ initDB().then(() => {
     startScheduler();
     checkAndRunInitialFetch();
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
         console.log('='.repeat(50));
-        console.log(`✓ API CDR Telmex + MySQL iniciada en puerto ${PORT}`);
+        console.log(`✓ API CDR Telmex + MySQL + WebSockets iniciada en puerto ${PORT}`);
         console.log(`✓ Ambiente: ${process.env.NODE_ENV || 'development'}`);
         console.log('='.repeat(50));
     });

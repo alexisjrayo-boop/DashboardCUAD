@@ -435,7 +435,7 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                         </div>
                         <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Proporción</span>
                     </h3>
-                    <div className="h-64 flex justify-center items-center relative">
+                    <div className="h-[290px] flex justify-center items-center relative">
                         <MonoDonutChart
                             data={dispositionChartData}
                             onClick={handleDispositionClick}
@@ -452,7 +452,7 @@ const DashboardCharts = ({ stats, chartsData, hourlyData, dailyData, dailyLineDa
                     </div>
                     <span className="mono-pill text-[10px] font-bold text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">Distribución por Hora</span>
                 </h3>
-                <div className="h-64">
+                <div className="h-[290px]">
                     <MonoSplineChart
                         data={filteredHourlyData}
                         onClick={handleHourlyClick}

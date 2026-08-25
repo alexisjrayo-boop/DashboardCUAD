@@ -7,27 +7,44 @@ const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(() => {
+        try {
+            const token = localStorage.getItem('token');
+            const savedUser = localStorage.getItem('user');
+            if (token) {
+                const decoded = jwtDecode(token);
+                // Verificar si el token expiró
+                if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    return null;
+                }
+                return savedUser ? JSON.parse(savedUser) : decoded;
+            }
+        } catch {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+        }
+        return null;
+    });
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
             try {
                 const decoded = jwtDecode(token);
-                // Verificar expiración
-                if (decoded.exp * 1000 < Date.now()) {
+                if (decoded.exp && decoded.exp * 1000 < Date.now()) {
                     localStorage.removeItem('token');
+                    localStorage.removeItem('user');
                     setUser(null);
-                } else {
-                    setUser(decoded);
                 }
-            } catch (error) {
+            } catch {
                 localStorage.removeItem('token');
+                localStorage.removeItem('user');
                 setUser(null);
             }
         }
-        setLoading(false);
     }, []);
 
     // Iniciar sesión por Correo Electrónico (o username)
@@ -41,6 +58,7 @@ export const AuthProvider = ({ children }) => {
             const { token, user: userData } = response.data;
 
             localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(userData));
             setUser(userData);
             return { success: true, user: userData };
         } catch (error) {
@@ -53,6 +71,7 @@ export const AuthProvider = ({ children }) => {
 
     const logout = () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         setUser(null);
     };
 
@@ -95,6 +114,7 @@ export const AuthProvider = ({ children }) => {
 
             if (sessionToken) {
                 localStorage.setItem('token', sessionToken);
+                localStorage.setItem('user', JSON.stringify(userData));
                 setUser(userData);
             }
             return { success: true, message, user: userData };
@@ -133,10 +153,9 @@ export const AuthProvider = ({ children }) => {
             const response = await api.put(`/auth/users/${id}`, userData);
 
             if (response.data.success && user && id === user.id) {
-                setUser(prev => ({
-                    ...prev,
-                    ...userData
-                }));
+                const updated = { ...user, ...userData };
+                localStorage.setItem('user', JSON.stringify(updated));
+                setUser(updated);
             }
 
             return response.data;

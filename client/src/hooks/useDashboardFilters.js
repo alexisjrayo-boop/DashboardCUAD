@@ -19,21 +19,41 @@ const formatDateTime = (d) => {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-const { start, end } = getInitialDates();
+const getInitialFiltersFromUrl = () => {
+    const { start, end } = getInitialDates();
+    let initialStartDate = formatDateTime(start);
+    let initialEndDate = formatDateTime(end);
+    let initialCalltype = '2';
+    let initialLine = '';
+    let initialDestination = [];
+    let initialDisposition = '';
 
-const INITIAL_FILTERS = {
-    startDate: formatDateTime(start),
-    endDate: formatDateTime(end),
-    destination: [],
-    line: '',
-    locationDestination: '',
-    disposition: '',
-    source: '', // New filter for caller number
-    calltype: '2' // Default Incoming
+    if (typeof window !== 'undefined' && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('startDate')) initialStartDate = params.get('startDate');
+        if (params.get('endDate')) initialEndDate = params.get('endDate');
+        if (params.get('calltype')) initialCalltype = params.get('calltype');
+        if (params.get('line')) initialLine = params.get('line');
+        if (params.get('disposition')) initialDisposition = params.get('disposition');
+        if (params.get('destination')) {
+            initialDestination = params.get('destination').split(',').map(s => s.trim()).filter(Boolean);
+        }
+    }
+
+    return {
+        startDate: initialStartDate,
+        endDate: initialEndDate,
+        destination: initialDestination,
+        line: initialLine,
+        locationDestination: '',
+        disposition: initialDisposition,
+        source: '',
+        calltype: initialCalltype
+    };
 };
 
 export const useDashboardFilters = () => {
-    const [filters, setFilters] = useState(INITIAL_FILTERS);
+    const [filters, setFilters] = useState(getInitialFiltersFromUrl);
 
     const updateFilters = useCallback((newFilters) => {
         setFilters(prev => ({ ...prev, ...newFilters }));

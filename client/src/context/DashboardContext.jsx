@@ -16,7 +16,7 @@ export const DashboardProvider = ({ children }) => {
     const { filters, updateFilters, clearFilters } = useDashboardFilters();
 
     // 3. Data Fetching
-    const { loading, data: rawData, fetchData, hasLoadedOnce } = useDashboardData(filters);
+    const { loading, data: rawData, fetchData, hasLoadedOnce, isConnected, isLiveActive, toggleLiveSync } = useDashboardData(filters);
 
     // 4. Filter data by branches for global consistency
     const data = useMemo(() => {
@@ -108,6 +108,9 @@ export const DashboardProvider = ({ children }) => {
         chartsData,
         extensionsMap,
         hasLoadedOnce,
+        isConnected,
+        isLiveActive,
+        toggleLiveSync,
         updateFilters,
         clearFilters,
         fetchData,

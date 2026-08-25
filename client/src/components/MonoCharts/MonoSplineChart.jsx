@@ -36,6 +36,8 @@ const MonoSplineChart = ({ data, onClick, fillArea = false, strokeColor }) => {
     const paddingTop = 20;
     const paddingBottom = 15;
 
+    const zeroY = viewBoxHeight - paddingBottom;
+
     const getControlPoint = (current, previous, next, reverse) => {
         const p = previous || current;
         const n = next || current;
@@ -45,7 +47,12 @@ const MonoSplineChart = ({ data, onClick, fillArea = false, strokeColor }) => {
         const angle = Math.atan2(lengthY, lengthX) + (reverse ? Math.PI : 0);
         const length = Math.sqrt(Math.pow(lengthX, 2) + Math.pow(lengthY, 2)) * smoothing;
         const x = current.x + Math.cos(angle) * length;
-        const y = current.y + Math.sin(angle) * length;
+        let y = current.y + Math.sin(angle) * length;
+
+        // Evitar que la curva baje del nivel 0 (zeroY) o suba más del techo (paddingTop)
+        if (y > zeroY) y = zeroY;
+        if (y < paddingTop) y = paddingTop;
+
         return { x, y };
     };
 
@@ -56,7 +63,7 @@ const MonoSplineChart = ({ data, onClick, fillArea = false, strokeColor }) => {
 
         const points = values.map((val, idx) => {
             const x = paddingX + (idx / Math.max(count - 1, 1)) * (viewBoxWidth - 2 * paddingX);
-            const y = viewBoxHeight - paddingBottom - (val / globalMax) * (viewBoxHeight - paddingTop - paddingBottom);
+            const y = zeroY - (val / globalMax) * (viewBoxHeight - paddingTop - paddingBottom);
             return { x, y, val, label: labels[idx], idx, seriesLabel: ds.label || `Línea ${sIdx + 1}`, color };
         });
 
@@ -66,12 +73,22 @@ const MonoSplineChart = ({ data, onClick, fillArea = false, strokeColor }) => {
 
         let d = `M ${points[0].x},${points[0].y}`;
         for (let i = 0; i < points.length - 1; i++) {
-            const cp1 = getControlPoint(points[i], points[i - 1], points[i + 1], false);
-            const cp2 = getControlPoint(points[i + 1], points[i], points[i + 2], true);
-            d += ` C ${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${points[i + 1].x},${points[i + 1].y}`;
+            // Si ambos puntos consecutivos son 0, trazar línea plana en la base sin curva
+            if (points[i].val === 0 && points[i + 1].val === 0) {
+                d += ` L ${points[i + 1].x},${zeroY}`;
+            } else {
+                const cp1 = getControlPoint(points[i], points[i - 1], points[i + 1], false);
+                const cp2 = getControlPoint(points[i + 1], points[i], points[i + 2], true);
+
+                // Forzar que los puntos de control Bézier nunca pasen por debajo del 0
+                cp1.y = Math.min(cp1.y, zeroY);
+                cp2.y = Math.min(cp2.y, zeroY);
+
+                d += ` C ${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${points[i + 1].x},${points[i + 1].y}`;
+            }
         }
 
-        const areaD = `${d} L ${points[points.length - 1].x},${viewBoxHeight - paddingBottom} L ${points[0].x},${viewBoxHeight - paddingBottom} Z`;
+        const areaD = `${d} L ${points[points.length - 1].x},${zeroY} L ${points[0].x},${zeroY} Z`;
 
         return {
             label: ds.label || `Línea ${sIdx + 1}`,

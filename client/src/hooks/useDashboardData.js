@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import api from '../services/api';
+import { useSocket } from './useSocket';
 
 export const useDashboardData = (filters) => {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState([]);
     const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+    const { isConnected, lastEvent } = useSocket();
 
     const fetchData = useCallback(async (forcedFilters = null) => {
         setLoading(true);
@@ -74,5 +76,26 @@ export const useDashboardData = (filters) => {
         Array.isArray(filters.destination) ? filters.destination.join(',') : filters.destination
     ]);
 
-    return { loading, data, fetchData, hasLoadedOnce };
+    const [isLiveActive, setIsLiveActive] = useState(() => {
+        const saved = localStorage.getItem('live_sync_active');
+        return saved !== null ? saved === 'true' : true;
+    });
+
+    const toggleLiveSync = useCallback(() => {
+        setIsLiveActive(prev => {
+            const next = !prev;
+            localStorage.setItem('live_sync_active', String(next));
+            return next;
+        });
+    }, []);
+
+    // Auto-fetch silently when real-time WebSocket event arrives and live sync is active
+    useEffect(() => {
+        if (isLiveActive && lastEvent && lastEvent.type === 'cdrs_updated') {
+            console.log('[Dashboard] Actualización en tiempo real recibida y activa, recargando datos...');
+            fetchData();
+        }
+    }, [isLiveActive, lastEvent, fetchData]);
+
+    return { loading, data, fetchData, hasLoadedOnce, isConnected, isLiveActive, toggleLiveSync };
 };

@@ -251,7 +251,7 @@ exports.login = async (req, res) => {
                 receive_reports: user.receive_reports === 1
             },
             JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: '365d' }
         );
 
         res.json({
@@ -441,7 +441,7 @@ exports.setPassword = async (req, res) => {
                 receive_reports: user.receive_reports === 1
             },
             JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: '365d' }
         );
 
         res.json({

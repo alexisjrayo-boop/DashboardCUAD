@@ -6,10 +6,10 @@ services:
     container_name: gasme-db-prod
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: G4sm32015
-      MYSQL_DATABASE: telmex_cdr
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: G4sm32015
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-G4sm32015}
+      MYSQL_DATABASE: ${DB_NAME:-telmex_cdr}
+      MYSQL_USER: ${DB_USER:-admin}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-G4sm32015}
     ports:
       - "3308:3307"
     volumes:
@@ -26,14 +26,21 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - PORT=3000
-      - DB_HOST=db
-      - DB_USER=admin
-      - DB_PASSWORD=G4sm32015
-      - DB_NAME=telmex_cdr
-      - JWT_SECRET=G4sm32025
-      - TELMEX_USERID=lino.sanchez
-      - TELMEX_USERPASS=pwfeWORB@9470.
+      - PORT=${PORT:-3000}
+      - DB_HOST=${DB_HOST:-db}
+      - DB_USER=${DB_USER:-admin}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-telmex_cdr}
+      - JWT_SECRET=${JWT_SECRET}
+      - TELMEX_USERID=${TELMEX_USERID}
+      - TELMEX_USERPASS=${TELMEX_USERPASS}
+      - SMTP_HOST=${SMTP_HOST:-smtp.ionos.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
+      - FRONTEND_URL=${FRONTEND_URL:-http://192.168.2.243:8080}
+      - APP_URL=${APP_URL:-http://192.168.2.243:8080}
     depends_on:
       - db
     networks:

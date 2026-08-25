@@ -207,26 +207,26 @@ const ChartConfigModal = ({ isOpen, onClose }) => {
         const formatDbDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 
         let startDate = '';
-        let endDate = formatDbDate(now);
+        let endDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} 23:59:59`;
         let periodName = 'Reporte Programado';
 
         const freq = recipient?.frequency || 'semanal';
 
         if (freq === 'diario') {
             const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-            startDate = formatDbDate(startToday);
+            startDate = `${startToday.getFullYear()}-${pad(startToday.getMonth() + 1)}-${pad(startToday.getDate())} 00:00:00`;
             periodName = `Reporte Diario (${formatShortDate(now)})`;
         } else if (freq === 'semanal') {
-            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            startDate = formatDbDate(sevenDaysAgo);
+            const sevenDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7, 0, 0, 0);
+            startDate = `${sevenDaysAgo.getFullYear()}-${pad(sevenDaysAgo.getMonth() + 1)}-${pad(sevenDaysAgo.getDate())} 00:00:00`;
             periodName = `Reporte Semanal (${formatShortDate(sevenDaysAgo)} al ${formatShortDate(now)})`;
         } else if (freq === 'quincenal') {
-            const fifteenDaysAgo = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
-            startDate = formatDbDate(fifteenDaysAgo);
+            const fifteenDaysAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 15, 0, 0, 0);
+            startDate = `${fifteenDaysAgo.getFullYear()}-${pad(fifteenDaysAgo.getMonth() + 1)}-${pad(fifteenDaysAgo.getDate())} 00:00:00`;
             periodName = `Reporte Quincenal (${formatShortDate(fifteenDaysAgo)} al ${formatShortDate(now)})`;
         } else if (freq === 'mensual') {
             const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
-            startDate = formatDbDate(firstOfMonth);
+            startDate = `${firstOfMonth.getFullYear()}-${pad(firstOfMonth.getMonth() + 1)}-${pad(firstOfMonth.getDate())} 00:00:00`;
             periodName = `Reporte Mensual (${formatShortDate(firstOfMonth)} al ${formatShortDate(now)})`;
         } else if (filters && filters.startDate && filters.endDate) {
             startDate = filters.startDate;

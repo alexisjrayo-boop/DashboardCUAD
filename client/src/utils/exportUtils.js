@@ -1,7 +1,9 @@
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import { Chart as ChartJS } from 'chart.js';
+import { Chart as ChartJS, registerables } from 'chart.js';
 import { processChartData } from './dashboardProcessing';
+
+ChartJS.register(...registerables);
 
 /**
  * Exporta el listado de llamadas (logs CDR) a un archivo Excel (.xlsx) de 1 sola pestaña.

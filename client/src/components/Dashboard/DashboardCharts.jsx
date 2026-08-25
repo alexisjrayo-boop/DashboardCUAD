@@ -4,16 +4,7 @@ import { useDashboard } from '../../context/DashboardContext';
 import { Line, Doughnut, Bar, Chart } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement,
-    Filler
+    registerables
 } from 'chart.js';
 import { SankeyController, Flow } from 'chartjs-chart-sankey';
 import { TreemapController, TreemapElement } from 'chartjs-chart-treemap';
@@ -26,16 +17,7 @@ import MonoTreemap from '../MonoCharts/MonoTreemap';
 import MonoRankList from '../MonoCharts/MonoRankList';
 
 ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement,
-    Filler,
+    ...registerables,
     SankeyController,
     Flow,
     TreemapController,

@@ -281,16 +281,8 @@ const DashboardFilters = ({
 
     return (
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.06)] transition-all duration-300 overflow-visible relative z-30 font-sans">
-            {/* 1. Header & Tabs */}
+            {/* 1. Tabs */}
             <div className={`border-b border-gray-100 pb-4 mb-4 ${loading ? 'opacity-80' : ''}`}>
-                <div className="flex justify-between items-center mb-3">
-                    <div className="flex items-center gap-2">
-                        <span className="w-2 h-6 bg-[#C3002F] rounded-full"></span>
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-gray-800">Filtros</h2>
-                        <span className="text-[10px] text-gray-400 font-semibold tracking-wide uppercase ml-2 opacity-70">Refina el análisis</span>
-                    </div>
-                </div>
-
                 {/* Tabs Navigation (Sliding Segment Control) */}
                 <div className="p-1 bg-gray-100 rounded-full border border-gray-200/70" role="tablist" aria-label="Tipos de llamadas">
                     <div className="relative grid grid-cols-3 w-full">
